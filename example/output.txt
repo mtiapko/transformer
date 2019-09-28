@@ -1,0 +1,27 @@
+We have in file example/source.hpp 3 classes:
+	Point2D does not have base classes :(
+
+	Point2D has 2 fields:
+		- float -> x (full name is math::geometry::Point2D::x)
+		- float -> y (full name is math::geometry::Point2D::y)
+
+	Point3D has 1 base class:
+		- Point2D from file example/source.hpp
+
+	Point3D has 3 fields:
+		- float -> x (full name is math::geometry::Point2D::x)
+		- float -> y (full name is math::geometry::Point2D::y)
+		- float -> z (full name is math::geometry::Point3D::z)
+
+	Shape does not have base classes :(
+
+	Shape has 1 fields:
+		- std::vector<Point3D> -> m_points (full name is math::geometry::Shape::m_points)
+
+	THE END!
+
+Enum Direction has type long:
+	- math::geometry::Direction::UP has value 0
+	- math::geometry::Direction::DOWN has value 1
+	- math::geometry::Direction::LEFT has value -10
+	- math::geometry::Direction::RIGHT has value -9

@@ -1,0 +1,3 @@
+[submodule "libs/mstch"]
+	path = libs/mstch
+	url = https://github.com/no1msd/mstch

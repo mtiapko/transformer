@@ -1,0 +1,30 @@
+We have in file {{file_path}} {{classes_count}} classes:
+{{#classes}}
+	{{^class_base_classes_is_empty}}
+	{{class_name}} has {{class_base_classes_count}} base class:
+	{{/class_base_classes_is_empty}}
+	{{#class_base_classes}}
+		- {{base_class_name}} from file {{base_class_file_path}}
+	{{/class_base_classes}}
+	{{#class_base_classes_is_empty}}
+	{{class_name}} does not have base classes :(
+	{{/class_base_classes_is_empty}}
+
+	{{^class_fields_is_empty}}
+	{{class_name}} has {{class_fields_count}} fields:
+	{{/class_fields_is_empty}}
+	{{#class_fields}}
+		- {{field_type}} -> {{field_name}} (full name is {{field_full_name}})
+	{{/class_fields}}
+
+	{{#classes_is_last_elem}}
+	THE END!
+	{{/classes_is_last_elem}}
+{{/classes}}
+
+{{#enums}}
+Enum {{enum_name}} has type {{enum_integer_type}}:
+{{#enum_consts}}
+	- {{const_full_name}} has value {{const_value}}
+{{/enum_consts}}
+{{/enums}}

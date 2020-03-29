@@ -1,7 +1,7 @@
 #include "transformer/Parser.h"
 #include "transformer/Util.h"
 
-namespace trans
+namespace transformer
 {
 
 /* static */ CXChildVisitResult Class::visitor(CXCursor cur, CXCursor /* parent */,

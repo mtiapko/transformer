@@ -1,7 +1,7 @@
 #include "transformer/Entity.h"
 #include "transformer/Util.h"
 
-namespace trans
+namespace transformer
 {
 
 Entity::Entity(CXCursor cur) noexcept

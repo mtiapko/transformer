@@ -1,3 +1,6 @@
-[submodule "libs/mstch"]
-	path = libs/mstch
-	url = https://github.com/no1msd/mstch
+[submodule "libs/json"]
+	path = libs/json
+	url = https://github.com/nlohmann/json
+[submodule "libs/inja"]
+	path = libs/inja
+	url = https://github.com/pantor/inja

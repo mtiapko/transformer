@@ -3,36 +3,42 @@
 #include "transformer/Exception.h"
 #include "transformer/Config.h"
 
-namespace trans
+namespace transformer
 {
 
 /* static */ void Config::print_help()
 {
-	std::cerr
-		<< "Usage:\n"
-		<< "    transformer <tmpl-file-path> <src-file-path> [options] [compiler args]...\n"
-		<< '\n'
-		<< "Options:\n"
-		<< "    -t --tmpl-file-path  template file path\n"
-		<< "    -s --src-file-path   source file path\n"
-		<< "    -o --out-file-path   output file path. default: stdout\n"
-		<< "    -a --tmpl-arg        template argument to use when rendering\n"
-		<< "    -c --compiler-args   all subsequent arguments will be sent\n"
-		<< "                         to the compiler\n"
-		<< "    -h --help            show help (this) message\n"
-		<< '\n';
+	std::cerr << R"(
+Usage:
+    transformerformer <tmpl-file-path> <src-file-path> [options] [compiler args]...
+
+Options:
+    -t --tmpl-file-path          template file path
+    -s --src-file-path           source file path
+    -o --out-file-path           output file path. default: stdout
+    -a --tmpl-arg                template argument to use when rendering
+                                 can be used several times
+       --no-strip-first-newline  not strip first newline after statement
+       --strip-beg-whitespaces   strip tab/spaces from beginning of a line
+    -c --compiler-args           all subsequent arguments will be sent
+                                 to the compiler
+    -h --help                    show help (this) message
+)";
 }
 
 Config::Config(int argc, char* const argv[])
 {
 	const char* const short_opts = "t:s:o:a:c::h";
+	int long_opts_flag = 0;
 	const option long_opts[] = {
-		{ "tmpl-file-path", required_argument, nullptr, 't' },
-		{ "src-file-path",  required_argument, nullptr, 's' },
-		{ "out-file-path",  required_argument, nullptr, 'o' },
-		{ "tmpl-arg",       required_argument, nullptr, 'a' },
-		{ "compiler-args",  optional_argument, nullptr, 'c' },
-		{ "help",           no_argument,       nullptr, 'h' },
+		{ "tmpl-file-path",         required_argument, nullptr, 't' },
+		{ "src-file-path",          required_argument, nullptr, 's' },
+		{ "out-file-path",          required_argument, nullptr, 'o' },
+		{ "tmpl-arg",               required_argument, nullptr, 'a' },
+		{ "no-strip-first-newline", no_argument,       &long_opts_flag, 'n' },
+		{ "strip-beg-whitespaces",  no_argument,       &long_opts_flag, 'w' },
+		{ "compiler-args",          optional_argument, nullptr, 'c' },
+		{ "help",                   no_argument,       nullptr, 'h' },
 		{}
 	};
 
@@ -69,29 +75,31 @@ Config::Config(int argc, char* const argv[])
 				compiler_args_pos = optind;
 				optind = argc;
 				break;
+			case 0:
+				switch (long_opts_flag) {
+					case 'n': m_no_strip_first_newline = true; break;
+					case 'w': m_strip_beg_whitespaces = true; break;
+					default:
+						throw TF_EXCEPTION("Unexpected long option. Internal command line arguments parser error");
+				}
+
+				break;
 			default:
 				Config::print_help();
 				if (opt != 'h')
-					throw TRANS_EXCEPTION("Failed to parse command line arguments");
+					throw TF_EXCEPTION("Failed to parse command line arguments");
 
 				std::exit(EXIT_SUCCESS);
 		}
 	}
 
 	const auto final_optind = optind;
-	if (m_tmpl_file_path.empty()) {
-		if (optind >= argc)
-			throw TRANS_EXCEPTION("Expected template file path as command line argument");
-
+	if (m_tmpl_file_path.empty() && optind < argc)
 		m_tmpl_file_path = argv[optind++];
-	}
 
-	if (m_src_file_path.empty()) {
-		if (optind >= argc)
-			throw TRANS_EXCEPTION("Expected source file path as command line argument");
 
+	if (m_src_file_path.empty() && optind < argc)
 		m_src_file_path = argv[optind++];
-	}
 
 	if (compiler_args_pos != -1) {
 		m_compiler_argc = argc - compiler_args_pos;

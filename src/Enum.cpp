@@ -2,7 +2,7 @@
 #include "transformer/Enum.h"
 #include "transformer/Util.h"
 
-namespace trans
+namespace transformer
 {
 
 /* static */ CXChildVisitResult Enum::visitor(CXCursor cur, CXCursor /* parent */,

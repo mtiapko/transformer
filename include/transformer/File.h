@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-namespace trans
+namespace transformer
 {
 
 class File

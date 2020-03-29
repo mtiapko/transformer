@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <clang-c/Index.h>
 
-namespace trans
+namespace transformer
 {
 
 template<typename EntityT>

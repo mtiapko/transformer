@@ -1,6 +1,6 @@
 #include "transformer/Util.h"
 
-namespace trans
+namespace transformer
 {
 
 /* static */ std::string Util::to_string(CXString s) noexcept

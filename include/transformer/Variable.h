@@ -3,7 +3,7 @@
 
 #include "transformer/Entity.h"
 
-namespace trans
+namespace transformer
 {
 
 class Variable : public Entity

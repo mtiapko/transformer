@@ -3,7 +3,7 @@
 #include "transformer/Util.h"
 #include "transformer/Log.h"
 
-namespace trans
+namespace transformer
 {
 
 /* static */ CXChildVisitResult Parser::visitor(CXCursor cur, CXCursor /* parent */,
@@ -61,9 +61,16 @@ Parser::Parser(const Config& cfg)
 		clang_disposeTranslationUnit
 	};
 
-	if (unit == nullptr)
-		throw TRANS_EXCEPTION("Failed to parse translation unit: ",
-			cfg.src_file_path().string());
+	if (unit == nullptr) {
+		if (cfg.src_file_path().empty())
+			return;
+
+		if (!std::filesystem::exists(cfg.src_file_path()))
+			throw TF_EXCEPTION("Source file '", cfg.src_file_path().native(), "' does not exist");
+
+		throw TF_EXCEPTION("Failed to parse translation unit: ",
+			cfg.src_file_path().native());
+	}
 
 	bool stop_parsing = false;
 	auto diags_count = clang_getNumDiagnostics(unit.get());
@@ -73,13 +80,13 @@ Parser::Parser(const Config& cfg)
 		> diag { clang_getDiagnostic(unit.get(), i), clang_disposeDiagnostic };
 
 		stop_parsing |= (clang_getDiagnosticSeverity(diag.get()) > CXDiagnostic_Warning);
-		TRANS_PRINT_ERR("[ clang ] ", clang_formatDiagnostic(diag.get(),
+		TF_PRINT_ERR("[ clang ] ", clang_formatDiagnostic(diag.get(),
 			clang_defaultDiagnosticDisplayOptions()));
 	}
 
 	if (stop_parsing)
-		throw TRANS_EXCEPTION("Error during parsing translation unit: ",
-			cfg.src_file_path().string());
+		throw TF_EXCEPTION("Error during parsing translation unit: ",
+			cfg.src_file_path().native());
 
 	auto cursor = clang_getTranslationUnitCursor(unit.get());
 	clang_visitChildren(cursor, Parser::visitor, this);

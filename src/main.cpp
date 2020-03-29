@@ -5,11 +5,11 @@
 int main(int argc, char* argv[])
 {
 	try {
-		trans::Config    config { argc, argv };
-		trans::Parser    parser { config };
-		trans::Generator gen    { config, parser };
-	} catch (const trans::Exception& e) {
-		TRANS_PRINT_ERR(e);
+		transformer::Config    config { argc, argv };
+		transformer::Parser    parser { config };
+		transformer::Generator gen    { config, parser };
+	} catch (const transformer::Exception& e) {
+		TF_PRINT_ERR(e);
 		return EXIT_FAILURE;
 	}
 

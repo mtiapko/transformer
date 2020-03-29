@@ -6,7 +6,7 @@
 #include "transformer/Class.h"
 #include "transformer/Enum.h"
 
-namespace trans
+namespace transformer
 {
 
 class Parser

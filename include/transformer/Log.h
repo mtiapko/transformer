@@ -4,17 +4,19 @@
 #include <iostream>
 #include <clang-c/CXString.h>
 
-#define TRANS_PRINT_IMPL(out, ...)  trans::Log::print(std::c##out, ##__VA_ARGS__, '\n');
-#define TRANS_PRINT(...)            TRANS_PRINT_IMPL(log, ##__VA_ARGS__);
-#define TRANS_PRINT_ERR(...)        TRANS_PRINT_IMPL(err, ##__VA_ARGS__);
+#define TF_PRINT_IMPL(out, ...)  transformer::Log::print(std::c##out, ##__VA_ARGS__, '\n');
+#define TF_PRINT(...)            TF_PRINT_IMPL(log, ##__VA_ARGS__);
+#define TF_PRINT_ERR(...)        TF_PRINT_IMPL(err, ##__VA_ARGS__);
 
-#define TRANS_LOG_IMPL(out, title, ...) TRANS_PRINT_IMPL(out, title, " " __FILE__ "::", __func__, \
-	" (", __LINE__, ") - ", ##__VA_ARGS__)
+#define TF_LOG_FMT __FILE__ "::", __func__, " (", __LINE__, ") - "
 
-#define TRANS_LOG(...)       TRANS_LOG_IMPL(log, "[  MSG  ]", ##__VA_ARGS__)
-#define TRANS_LOG_ERROR(...) TRANS_LOG_IMPL(err, "[ ERROR ]", ##__VA_ARGS__)
+#define TF_LOG_IMPL(...) TF_PRINT("[  MSG  ] ", ##__VA_ARGS__)
+#define TF_LOG(...)      TF_LOG_IMPL(TF_LOG_FMT, ##__VA_ARGS__)
 
-namespace trans
+#define TF_LOG_ERROR_IMPL(...) TF_PRINT_ERR("[ ERROR ] ", ##__VA_ARGS__)
+#define TF_LOG_ERROR(...)      TF_LOG_ERROR_IMPL(TF_LOG_FMT, ##__VA_ARGS__)
+
+namespace transformer
 {
 
 class Log

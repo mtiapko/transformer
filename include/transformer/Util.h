@@ -4,7 +4,7 @@
 #include <clang-c/Index.h>
 #include <string>
 
-namespace trans
+namespace transformer
 {
 
 struct Util

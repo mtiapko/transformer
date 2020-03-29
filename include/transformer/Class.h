@@ -4,7 +4,7 @@
 #include <vector>
 #include "transformer/ClassField.h"
 
-namespace trans
+namespace transformer
 {
 
 class Class : public Entity

@@ -1,7 +1,7 @@
 #include "transformer/Variable.h"
 #include "transformer/Util.h"
 
-namespace trans
+namespace transformer
 {
 
 Variable::Variable(CXCursor cur) noexcept

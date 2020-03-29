@@ -4,7 +4,7 @@
 #include <vector>
 #include "transformer/EnumConst.h"
 
-namespace trans
+namespace transformer
 {
 
 class Enum : public Entity

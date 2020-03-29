@@ -2,11 +2,11 @@ CC := g++
 LD := g++
 
 CC_FLAGS := -std=c++17 -Wall -Wextra -Wpedantic -MMD -MP -O3
-CC_INCLUDES := -I./include -I./libs/mstch/include
+CC_INCLUDES := -I./include -I./libs/inja/include -I./libs/json/include
 CC_DEFINES :=
 
-LD_FLAGS := -L./libs/mstch/src/
-LD_LIBS := -lclang -l:libmstch.a
+LD_FLAGS :=
+LD_LIBS := -lclang
 
 SRC_DIR := src
 OBJ_DIR := bin/obj
@@ -20,13 +20,6 @@ OUT := $(addprefix $(OUT_DIR), $(OUT_NAME))
 
 all: libs
 	@$(MAKE) --no-print-directory --jobs 8 $(OUT)
-
-.PHONY: libs
-libs: libs/mstch/src/libmstch.a
-
-libs/mstch/src/libmstch.a:
-	cmake -S ./libs/mstch -B ./libs/mstch
-	make --directory ./libs/mstch
 
 $(OUT): $(OBJ)
 	@mkdir --parent $(@D)

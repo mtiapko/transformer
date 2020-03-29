@@ -1,36 +1,64 @@
 #include <fstream>
-#include "transformer/Exception.h"
 #include "transformer/File.h"
+#include "transformer/Log.h"
 
-namespace trans
+namespace transformer
 {
+
+namespace
+{
+	template<typename... Args>
+	[[noreturn]] void print_error_and_exit(std::string_view file_path,
+		std::string_view op, const Args&... args)
+	{
+		TF_LOG_ERROR_IMPL(args..., "Failed to ", op, " file '", file_path, "': ",
+			std::generic_category().message(errno));
+
+		std::exit(EXIT_FAILURE);
+	}
+}
 
 /* static */ std::string File::read(const std::filesystem::path& file_path)
 {
-	std::ifstream file(file_path, std::ios::in | std::ios::ate | std::ios::binary);
-	if (!file.is_open())
-		throw TRANS_EXCEPTION("Failed to open file '", file_path.string(), '\'');
+	std::ifstream file;
+	file.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+
+	try {
+		file.open(file_path, std::ios::in | std::ios::ate | std::ios::binary);
+	} catch (const std::system_error&) {
+		print_error_and_exit(file_path.native(), "open for reading", TF_LOG_FMT);
+	}
 
 	std::string data;
 	data.resize(file.tellg());
 
 	file.seekg(std::ios::beg);
-	file.read(data.data(), data.size());
-	if (file.fail())
-		throw TRANS_EXCEPTION("Failed to read from file '", file_path.string(), '\'');
+
+	try {
+		file.read(data.data(), data.size());
+	} catch (const std::ios_base::failure&) {
+		print_error_and_exit(file_path.native(), "read from", TF_LOG_FMT);
+	}
 
 	return data;
 }
 
 /* static */ void File::write(const std::filesystem::path& file_path, std::string_view data)
 {
-	std::ofstream file(file_path, std::ios::out | std::ios::binary);
-	if (!file.is_open())
-		throw TRANS_EXCEPTION("Failed to open file '", file_path.string(), '\'');
+	std::ofstream file;
+	file.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 
-	file.write(data.data(), data.size());
-	if (file.fail())
-		throw TRANS_EXCEPTION("Failed to write to file '", file_path.string(), '\'');
+	try {
+		file.open(file_path, std::ios::out | std::ios::binary);
+	} catch (const std::ios_base::failure&) {
+		print_error_and_exit(file_path.native(), "open for writing", TF_LOG_FMT);
+	}
+
+	try {
+		file.write(data.data(), data.size());
+	} catch (const std::ios_base::failure&) {
+		print_error_and_exit(file_path.native(), "write to", TF_LOG_FMT);
+	}
 }
 
 }

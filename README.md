@@ -1,10 +1,10 @@
 # Transformer - C/C++ code parser and generator
-Tool for parsing C/C++ code and generating output using a given `Mustache` template. This might be useful for creating reflection/RTTI frameworks for C/C++ (or you can just wait until 2023 or 2026 year and use standard implementation... ~~[or use Java](https://www.youtube.com/watch?v=umDr0mPuyQc "Java")~~)
+Tool for parsing C/C++ code and generating output using a given **Jinja**-like template. This might be useful for creating reflection/RTTI frameworks for C/C++ (or you can just wait until 2023 or 2026 year and use standard implementation... ~~[or use Java](https://www.youtube.com/watch?v=umDr0mPuyQc "Java")~~)
 
 Currently supported features:
 - struct/class fields parsing
 - enum parsing
-- generation output using [Mustache](https://mustache.github.io) template
+- generation output using **[Jinja](https://palletsprojects.com/p/jinja/)**-like template
 
 # Usage example
 Let's imagine that we have some files:
@@ -45,41 +45,41 @@ private:
 }
 ```
 
-#### [example/template.mustache](example/template.mustache)
-```mustache
-We have in file {{file_path}} {{classes_count}} classes:
-{{#classes}}
-	{{^class_base_classes_is_empty}}
-	{{class_name}} has {{class_base_classes_count}} base class:
-	{{/class_base_classes_is_empty}}
-	{{#class_base_classes}}
-		- {{base_class_name}} from file {{base_class_file_path}}
-	{{/class_base_classes}}
-	{{#class_base_classes_is_empty}}
-	{{class_name}} does not have base classes :(
-	{{/class_base_classes_is_empty}}
+#### [example/template.inja](example/template.inja)
+```jinja
+We have in file {{ file_path }} {{ length(classes) }} classes:
+{% for c in classes %}
+	{% if length(c.base_classes) != 0 %}
+	{{ c.name }} has {{ length(c.base_classes) }} base class:
+	{% endif %}
+	{% for b in c.base_classes %}
+		- {{ b.name }} from file {{ b.file_path }}
+	{% endfor %}
+	{% if length(c.base_classes) == 0 %}
+	{{ c.name }} does not have base classes :(
+	{% endif %}
 
-	{{^class_fields_is_empty}}
-	{{class_name}} has {{class_fields_count}} fields:
-	{{/class_fields_is_empty}}
-	{{#class_fields}}
-		- {{field_type}} -> {{field_name}} (full name is {{field_full_name}})
-	{{/class_fields}}
+	{% if length(c.fields) != 0 %}
+	{{ c.name }} has {{ length(c.fields) }} fields:
+	{% endif %}
+	{% for f in c.fields %}
+		- {{ f.type }} -> {{ f.name }} (full name is {{ f.full_name }})
+	{% endfor %}
 
-	{{#classes_is_last_elem}}
+	{% if loop.is_last %}
 	THE END!
-	{{/classes_is_last_elem}}
-{{/classes}}
+	{% endif %}
+{% endfor %}
 
-{{#enums}}
-Enum {{enum_name}} has type {{enum_integer_type}}:
-{{#enum_consts}}
-	- {{const_full_name}} has value {{const_value}}
-{{/enum_consts}}
-{{/enums}}
+{% for e in enums %}
+Enum {{ e.name }} has type {{ e.integer_type }}:
+	{% for c in e.consts %}
+	- {{ c.full_name }} has value {{ c.value }}
+	{% endfor %}
+{% endfor %}
 ```
 
-After execution of command `transformer example/template.mustache example/source.hpp` the output will be:
+After execution of command `transformer example/template.inja example/source.hpp` the output will be:
 ```text
 We have in file example/source.hpp 3 classes:
 	Point2D does not have base classes :(
@@ -117,7 +117,8 @@ Enum Direction has type long:
 - [CMake](https://cmake.org/) 3.0+ for building
 
 # Third-party libs
-- [mstch](https://github.com/no1msd/mstch) for parsing and rendering `Mustache` templates
+- [inja](https://github.com/pantor/inja) for parsing and rendering **Jinja**-like templates
+- [json](https://github.com/nlohmann/json) required by `inja` for data input and handling
 
 # Installation
 This is a piece of [cake](https://www.youtube.com/watch?v=dQw4w9WgXcQ ":cake:"):
@@ -125,6 +126,8 @@ This is a piece of [cake](https://www.youtube.com/watch?v=dQw4w9WgXcQ ":cake:"):
 git clone --recursive https://github.com/mtiapko/transformer
 make
 ```
+### But!
+[Be careful](https://www.youtube.com/watch?v=mFElmSV87pg), `nlohmann/json` is very heavy repo (240MB+). But `inja` requires only source files (only include directory). So you can clone this repo without `--recursive` if `nlohmann/json` already exists in your filesystem or manually download only source files and put them in `libs/json/include/nlohmann/<header-files>`.
 
 # Troubleshooting
 > ### [ clang ] fatal error: 'stddef.h' file not found

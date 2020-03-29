@@ -3,9 +3,9 @@
 
 #include <sstream>
 
-#define TRANS_EXCEPTION(...) trans::Exception(__FILE__, __func__, __LINE__, ##__VA_ARGS__)
+#define TF_EXCEPTION(...) transformer::Exception(__FILE__, __func__, __LINE__, ##__VA_ARGS__)
 
-namespace trans
+namespace transformer
 {
 
 class Exception

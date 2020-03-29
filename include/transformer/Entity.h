@@ -4,7 +4,7 @@
 #include <string>
 #include <clang-c/Index.h>
 
-namespace trans
+namespace transformer
 {
 
 class Entity

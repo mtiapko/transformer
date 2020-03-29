@@ -1,0 +1,30 @@
+We have in file {{ file_path }} {{ length(classes) }} classes:
+{% for c in classes %}
+	{% if length(c.base_classes) != 0 %}
+	{{ c.name }} has {{ length(c.base_classes) }} base class:
+	{% endif %}
+	{% for b in c.base_classes %}
+		- {{ b.name }} from file {{ b.file_path }}
+	{% endfor %}
+	{% if length(c.base_classes) == 0 %}
+	{{ c.name }} does not have base classes :(
+	{% endif %}
+
+	{% if length(c.fields) != 0 %}
+	{{ c.name }} has {{ length(c.fields) }} fields:
+	{% endif %}
+	{% for f in c.fields %}
+		- {{ f.type }} -> {{ f.name }} (full name is {{ f.full_name }})
+	{% endfor %}
+
+	{% if loop.is_last %}
+	THE END!
+	{% endif %}
+{% endfor %}
+
+{% for e in enums %}
+Enum {{ e.name }} has type {{ e.integer_type }}:
+	{% for c in e.consts %}
+	- {{ c.full_name }} has value {{ c.value }}
+	{% endfor %}
+{% endfor %}

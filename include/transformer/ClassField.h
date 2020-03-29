@@ -3,7 +3,7 @@
 
 #include "transformer/Variable.h"
 
-namespace trans
+namespace transformer
 {
 
 class ClassField : public Variable

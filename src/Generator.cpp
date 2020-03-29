@@ -1,78 +1,44 @@
 #include <iostream>
 #include "transformer/Generator.h"
 #include "transformer/File.h"
+#include "transformer/Log.h"
 
-namespace trans
+namespace transformer
 {
 
-/* static */ void Generator::tmpl_content_visitor(mstch::node& obj) noexcept
+/* static */ inja::json Generator::create_class_tmpl_content(const Parser& p, const Class& c) noexcept
 {
-	if (auto arr = boost::get<mstch::array>(&obj); arr != nullptr)
-		return Generator::tmpl_content_visitor(arr);
-
-	if (auto map = boost::get<mstch::map>(&obj); map != nullptr)
-		return Generator::tmpl_content_visitor(map);
-}
-
-/* static */ void Generator::tmpl_content_visitor(mstch::array* arr) noexcept
-{
-	for (auto& obj: *arr)
-		Generator::tmpl_content_visitor(obj);
-}
-
-/* static */ void Generator::tmpl_content_visitor(mstch::map* map) noexcept
-{
-	for (auto& [name, node]: *map) {
-		if (auto arr = boost::get<mstch::array>(&node); arr != nullptr) {
-			map->emplace(name + std::string("_count"), std::to_string(arr->size()));
-			if (!arr->empty()) {
-				if (auto first = boost::get<mstch::map>(&arr->front()); first != nullptr)
-					first->emplace(name + std::string("_is_first_elem"), true);
-
-				if (auto last = boost::get<mstch::map>(&arr->back()); last != nullptr)
-					last->emplace(name + std::string("_is_last_elem"), true);
-			} else {
-				map->emplace(name + std::string("_is_empty"), true);
-			}
-		}
-
-		Generator::tmpl_content_visitor(node);
-	}
-}
-
-/* static */ mstch::map Generator::create_class_tmpl_content(const Parser& p, const Class& c) noexcept
-{
-	mstch::array base_classes_list;
+	std::vector<inja::json> base_classes_list;
 	base_classes_list.reserve(c.base_classes().size());
 	for (auto base_id: c.base_classes()) {
 		const auto& b = p.classes().entities()[base_id];
 		base_classes_list.emplace_back(Generator::create_base_class_tmpl_content(b));
 	}
 
-	mstch::array fields_list;
-	fields_list.reserve(c.fields().size());
+	std::vector<inja::json> fields_list;
+	fields_list.reserve(c.fields().size()); /* NOTE(FiTH): reserve only for class field, w/o fields from base classes */
 	Generator::create_recursive_class_fields_tmpl_content(p, c, fields_list);
 
 	return {
-		{ "class_file_path",    c.file_path()                },
-		{ "class_full_name",    c.full_name()                },
-		{ "class_name",         c.name()                     },
-		{ "class_base_classes", std::move(base_classes_list) },
-		{ "class_fields",       std::move(fields_list)       }
+		{ /* class_ */ "file_path",    c.file_path()                },
+		{ /* class_ */ "full_name",    c.full_name()                },
+		{ /* class_ */ "name",         c.name()                     },
+		{ /* class_ */ "base_classes", std::move(base_classes_list) },
+		{ /* class_ */ "fields",       std::move(fields_list)       }
 	};
 }
 
-/* static */ mstch::map Generator::create_base_class_tmpl_content(const Class& b) noexcept
+/* static */ inja::json Generator::create_base_class_tmpl_content(const Class& b) noexcept
 {
 	return {
-		{ "base_class_file_path", b.file_path() },
-		{ "base_class_full_name", b.full_name() },
-		{ "base_class_name",      b.name()      }
+		{ /* base_class_ */ "file_path", b.file_path() },
+		{ /* base_class_ */ "full_name", b.full_name() },
+		{ /* base_class_ */ "name",      b.name()      }
 	};
 }
 
 /* static */ void Generator::create_recursive_class_fields_tmpl_content(const Parser& p, const Class& c,
-	mstch::array& fields_list) noexcept
+	std::vector<inja::json>& fields_list) noexcept
 {
 	for (auto base_id: c.base_classes()) {
 		const auto& b = p.classes().entities()[base_id];
@@ -83,49 +49,49 @@ namespace trans
 		fields_list.emplace_back(Generator::create_class_field_tmpl_content(f));
 }
 
-/* static */ mstch::map Generator::create_class_field_tmpl_content(const ClassField& f) noexcept
+/* static */ inja::json Generator::create_class_field_tmpl_content(const ClassField& f) noexcept
 {
 	return {
-		{ "field_file_path", f.file_path() },
-		{ "field_full_name", f.full_name() },
-		{ "field_name",      f.name()      },
-		{ "field_type",      f.type()      }
+		{ /* field_ */ "file_path", f.file_path() },
+		{ /* field_ */ "full_name", f.full_name() },
+		{ /* field_ */ "name",      f.name()      },
+		{ /* field_ */ "type",      f.type()      }
 	};
 }
 
-/* static */ mstch::map Generator::create_enum_tmpl_content(const Enum& e) noexcept
+/* static */ inja::json Generator::create_enum_tmpl_content(const Enum& e) noexcept
 {
-	mstch::array consts_list;
+	std::vector<inja::json> consts_list;
 	consts_list.reserve(e.consts().size());
 	for (const auto& c: e.consts())
 		consts_list.emplace_back(Generator::create_enum_const_tmpl_content(e, c));
 
 	return {
-		{ "enum_file_path",    e.file_path()          },
-		{ "enum_full_name",    e.full_name()          },
-		{ "enum_name",         e.name()               },
-		{ "enum_integer_type", e.integer_type()       },
-		{ "enum_consts",       std::move(consts_list) }
+		{ /* enum_ */ "file_path",    e.file_path()          },
+		{ /* enum_ */ "full_name",    e.full_name()          },
+		{ /* enum_ */ "name",         e.name()               },
+		{ /* enum_ */ "integer_type", e.integer_type()       },
+		{ /* enum_ */ "consts",       std::move(consts_list) }
 	};
 }
 
-/* static */ mstch::map Generator::create_enum_const_tmpl_content(const Enum& e, const EnumConst& c) noexcept
+/* static */ inja::json Generator::create_enum_const_tmpl_content(const Enum& e, const EnumConst& c) noexcept
 {
 	auto value = (e.is_unsigned_integer_type()
 		? std::to_string(c.unsigned_value())
 		: std::to_string(c.signed_value()));
 
 	return {
-		{ "const_file_path", c.file_path()    },
-		{ "const_full_name", c.full_name()    },
-		{ "const_name",      c.name()         },
-		{ "const_value",     std::move(value) }
+		{ /* const_ */ "file_path", c.file_path()    },
+		{ /* const_ */ "full_name", c.full_name()    },
+		{ /* const_ */ "name",      c.name()         },
+		{ /* const_ */ "value",     std::move(value) }
 	};
 }
 
-/* static */ mstch::map Generator::create_tmpl_content(const Config& cfg, const Parser& parser) noexcept
+/* static */ inja::json Generator::create_tmpl_content(const Config& cfg, const Parser& parser) noexcept
 {
-	mstch::array classes_list;
+	std::vector<inja::json> classes_list;
 	classes_list.reserve(parser.classes().entities().size());
 	for (const auto& c: parser.classes().entities()) {
 		if (!c.is_from_main_file())
@@ -134,7 +100,7 @@ namespace trans
 		classes_list.emplace_back(Generator::create_class_tmpl_content(parser, c));
 	}
 
-	mstch::array enums_list;
+	std::vector<inja::json> enums_list;
 	enums_list.reserve(parser.enums().entities().size());
 	for (const auto& e: parser.enums().entities()) {
 		if (!e.is_from_main_file())
@@ -143,8 +109,8 @@ namespace trans
 		enums_list.emplace_back(Generator::create_enum_tmpl_content(e));
 	}
 
-	mstch::map tmpl_content {
-		{ "file_path", cfg.src_file_path().string() },
+	inja::json tmpl_content {
+		{ "file_path", cfg.src_file_path().native() },
 		{ "classes",   std::move(classes_list)      },
 		{ "enums",     std::move(enums_list)        }
 	};
@@ -157,15 +123,27 @@ namespace trans
 
 Generator::Generator(const Config& cfg, const Parser& parser)
 {
+	if (cfg.tmpl_file_path().empty())
+		return;
+
 	auto tmpl = File::read(cfg.tmpl_file_path());
 	auto tmpl_content = Generator::create_tmpl_content(cfg, parser);
-	Generator::tmpl_content_visitor(&tmpl_content);
 
-	mstch::config::escape = [](const std::string& str) { return str; };
-	auto res = mstch::render(tmpl, tmpl_content);
+	auto env = inja::Environment {};
+	env.set_trim_blocks(!cfg.no_strip_first_newline());
+	env.set_lstrip_blocks(cfg.strip_beg_whitespaces());
 
-	if (!cfg.out_file_path().empty()) File::write(cfg.out_file_path(), res);
-	else std::cout << res;
+	try {
+		auto compiled_tmpl = env.parse(tmpl);
+		auto res = env.render(compiled_tmpl, tmpl_content);
+
+		if (!cfg.out_file_path().empty()) File::write(cfg.out_file_path(), res);
+		else std::cout << res;
+	} catch (const inja::InjaError& e) {
+		TF_PRINT_ERR("[ inja  ] ", cfg.tmpl_file_path().native(), ' ', e.what());
+
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 }

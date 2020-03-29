@@ -112,16 +112,15 @@ Enum Direction has type long:
 
 # Requirements
 - [GCC](https://gcc.gnu.org/) with C++17 support
-- [LibClang](https://clang.llvm.org/docs/Tooling.html) for parsing C/C++ core
-- [Boost](https://www.boost.org/doc/libs/1_71_0/doc/html/variant.html) 1.54+ for Boost.Variant
-- [CMake](https://cmake.org/) 3.0+ for building
+- [GNU Make](https://www.gnu.org/software/make/) for building
+- [LibClang](https://clang.llvm.org/docs/Tooling.html) for parsing C/C++ code
 
 # Third-party libs
 - [inja](https://github.com/pantor/inja) for parsing and rendering **Jinja**-like templates
 - [json](https://github.com/nlohmann/json) required by `inja` for data input and handling
 
 # Installation
-This is a piece of [cake](https://www.youtube.com/watch?v=dQw4w9WgXcQ ":cake:"):
+This is a piece of [cake](https://www.youtube.com/watch?v=dQw4w9WgXcQ "lie"):
 ```
 git clone --recursive https://github.com/mtiapko/transformer
 make

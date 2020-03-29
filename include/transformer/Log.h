@@ -10,8 +10,11 @@
 
 #define TF_LOG_FMT __FILE__ "::", __func__, " (", __LINE__, ") - "
 
-#define TF_LOG_IMPL(...) TF_PRINT("[  MSG  ] ", ##__VA_ARGS__)
-#define TF_LOG(...)      TF_LOG_IMPL(TF_LOG_FMT, ##__VA_ARGS__)
+#define TF_LOG_IMPL(...)       TF_PRINT("[  MSG  ] ", ##__VA_ARGS__)
+#define TF_LOG(...)            TF_LOG_IMPL(TF_LOG_FMT, ##__VA_ARGS__)
+
+#define TF_LOG_WARN_IMPL(...)  TF_PRINT_ERR("[WARNING] ", ##__VA_ARGS__)
+#define TF_LOG_WARN(...)       TF_LOG_WARN_IMPL(TF_LOG_FMT, ##__VA_ARGS__)
 
 #define TF_LOG_ERROR_IMPL(...) TF_PRINT_ERR("[ ERROR ] ", ##__VA_ARGS__)
 #define TF_LOG_ERROR(...)      TF_LOG_ERROR_IMPL(TF_LOG_FMT, ##__VA_ARGS__)

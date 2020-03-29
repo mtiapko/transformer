@@ -51,12 +51,27 @@ namespace transformer
 
 /* static */ inja::json Generator::create_class_field_tmpl_content(const ClassField& f) noexcept
 {
-	return {
-		{ /* field_ */ "file_path", f.file_path() },
-		{ /* field_ */ "full_name", f.full_name() },
-		{ /* field_ */ "name",      f.name()      },
-		{ /* field_ */ "type",      f.type()      }
+	inja::json j = {
+		{ /* field_ */ "file_path",       f.file_path()       },
+		{ /* field_ */ "full_name",       f.full_name()       },
+		{ /* field_ */ "name",            f.name()            },
+		{ /* field_ */ "type",            f.type()            },
+		/* -------------------------------------------------- */
+		{ /* field_ */ "is_builtin_type", f.is_builtin_type() },
+		{ /* field_ */ "is_pointer_type", f.is_pointer_type() },
+		{ /* field_ */ "is_array_type",   f.is_array_type()   },
+		{ /* field_ */ "is_enum_type",    f.is_enum_type()    },
 	};
+
+	if (f.is_array_type()) {
+		j.emplace(/* field_ */ "element_type", f.element_type());
+		j.emplace(/* field_ */ "is_incomplete_array", f.is_incomplete_array());
+
+		if (!f.is_incomplete_array())
+			j.emplace(/* field_ */ "elements_counts", f.elements_counts());
+	}
+
+	return j;
 }
 
 /* static */ inja::json Generator::create_enum_tmpl_content(const Enum& e) noexcept

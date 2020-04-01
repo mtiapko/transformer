@@ -9,7 +9,7 @@ Currently supported features:
 # Usage example
 Let's imagine that we have some files:
 
-#### [example/source.hpp](example/source.hpp)
+#### [example/simple/source.hpp](example/simple/source.hpp)
 ```c++
 #include <vector>
 
@@ -45,7 +45,7 @@ private:
 }
 ```
 
-#### [example/template.inja](example/template.inja)
+#### [example/simple/template.inja](example/simple/template.inja)
 ```jinja
 We have in file {{ file_path }} {{ length(classes) }} classes:
 {% for c in classes %}
@@ -79,9 +79,9 @@ Enum {{ e.name }} has type {{ e.integer_type }}:
 {% endfor %}
 ```
 
-After execution of command `transformer example/template.inja example/source.hpp` the output will be:
+After execution of command `transformer example/simple/template.inja example/simple/source.hpp` the output will be:
 ```text
-We have in file example/source.hpp 3 classes:
+We have in file example/simple/source.hpp 3 classes:
 	Point2D does not have base classes :(
 
 	Point2D has 2 fields:
@@ -89,7 +89,7 @@ We have in file example/source.hpp 3 classes:
 		- float -> y (full name is math::geometry::Point2D::y)
 
 	Point3D has 1 base class:
-		- Point2D from file example/source.hpp
+		- Point2D from file example/simple/source.hpp
 
 	Point3D has 3 fields:
 		- float -> x (full name is math::geometry::Point2D::x)
@@ -110,6 +110,11 @@ Enum Direction has type long:
 	- math::geometry::Direction::RIGHT has value -9
 ```
 
+For more information about tool usage execute command:
+```bash
+transformer --help
+```
+
 # Requirements
 - [GCC](https://gcc.gnu.org/) with C++17 support
 - [GNU Make](https://www.gnu.org/software/make/) for building
@@ -119,12 +124,15 @@ Enum Direction has type long:
 - [inja](https://github.com/pantor/inja) for parsing and rendering **Jinja**-like templates
 - [json](https://github.com/nlohmann/json) required by `inja` for data input and handling
 
-# Installation
+# Downloading and compilation
 This is a piece of [cake](https://www.youtube.com/watch?v=dQw4w9WgXcQ "lie"):
 ```
 git clone --recursive https://github.com/mtiapko/transformer
 make
 ```
+
+Compiled tool binary will be in `bin/` directory.
+
 ### But!
 [Be careful](https://www.youtube.com/watch?v=mFElmSV87pg), `nlohmann/json` is very heavy repo (240MB+). But `inja` requires only source files (only include directory). So you can clone this repo without `--recursive` if `nlohmann/json` already exists in your filesystem or manually download only source files and put them in `libs/json/include/nlohmann/<header-files>`.
 

@@ -1,0 +1,181 @@
+#include "rtti/DB.h"
+#include "../../../libs/json/include/nlohmann/json.hpp"
+
+## for c in classes
+template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_info<struct {{ c.full_name }}>() noexcept;
+## endfor
+
+#include "rect.h" // TODO: add file name var
+
+## for c in classes
+namespace rtti
+{
+
+/* info */
+
+template<>
+/* static */ ObjectTypeInfo DB::make_object_type_info<{{ c.full_name }}>() noexcept
+{
+	ObjectTypeInfo info {
+	/* TypeInfo */
+	{
+		"{{ c.name }}",
+		&DB::object_set_value<{{ c.full_name }}>,
+		{},
+	},
+	/* ObjectTypeInfo */
+	{
+## for f in c.fields
+		{
+			/* TypeInfo */
+			{
+				"{{ f.name }}", /* type: {{ f.type }} */
+				/* setter */ [](void* inst, const Variant& value) noexcept
+				{
+## if f.is_builtin_type
+				auto this_ptr = ({{ c.full_name }}*)inst;
+				if constexpr (std::is_floating_point_v<{{ f.type }}>) {
+					if (value.type() == Variant::value_t::number_float) {
+						const auto v = value.get_ptr<const Variant::number_float_t*>();
+						if (v == nullptr) {
+							// TODO: rewrite error msg
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Float>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_integer) {
+						const auto v = value.get_ptr<const Variant::number_integer_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Integer>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_unsigned) {
+						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Unsigned>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else {
+						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
+					}
+				} else if constexpr (std::is_unsigned_v<{{ f.type }}>) {
+					if (value.type() == Variant::value_t::number_unsigned) {
+						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Unsigned>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_integer) {
+						const auto v = value.get_ptr<const Variant::number_integer_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Integer>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_float) {
+						const auto v = value.get_ptr<const Variant::number_float_t*>();
+						if (v == nullptr) {
+							// TODO: rewrite error msg
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Float>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else {
+						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
+					}
+				} else if constexpr (std::is_signed_v<{{ f.type }}>) {
+					if (value.type() == Variant::value_t::number_integer) {
+						const auto v = value.get_ptr<const Variant::number_integer_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Integer>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_unsigned) {
+						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
+						if (v == nullptr) {
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Unsigned>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else if (value.type() == Variant::value_t::number_float) {
+						const auto v = value.get_ptr<const Variant::number_float_t*>();
+						if (v == nullptr) {
+							// TODO: rewrite error msg
+							std::cerr << "Error! {{ f.full_name }} type mismatch: '{{ f.type }}' and '" << value.type_name() << "'\n";
+							return;
+						}
+
+						std::clog << "Success! <Float>: {{ f.full_name }} setted to " << *v << '\n';
+						this_ptr->{{ f.name }} = static_cast<{{ f.type }}>(*v);
+					} else {
+						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
+					}
+				} else {
+					extern void not_existing_func();
+					not_existing_func();
+
+					std::cerr << "Error! Unexpected type '{{ f.type }}' of '{{ f.full_name }}'\n";
+				}
+## else
+					DB::object_set_value<{{ f.type }}>(&(({{ c.full_name }}*)inst)->{{ f.name }}, value);
+## endif
+				},
+				/* getter */ {},
+			},
+			/* ObjectFieldTypeInfo */
+			/* get addr */ [](void* this_ptr) noexcept -> void*
+			{
+				return &(({{ c.full_name }}*)this_ptr)->{{ f.name }};
+			},
+			&DB::get_object_type_info<{{ f.type }}>
+		},
+## endfor
+	},
+	{
+## for f in c.fields
+		{ "{{ f.name }}", &info.fields_info[{{ loop.index }}] },
+## endfor
+	}
+};
+
+	return info;
+}
+
+namespace
+{
+
+static const ObjectTypeInfo info_{{ loop.index }} = DB::make_object_type_info<{{ c.full_name }}>();
+
+} /* namespace <anonymous> */
+
+/* DB::get_object_type_info() */
+
+template<>
+/* static */ const ObjectTypeInfo* DB::get_object_type_info<{{ c.full_name }}>() noexcept
+{
+	return &info_{{ loop.index }};
+}
+
+} /* namespace rtti */
+
+## endfor

@@ -1,0 +1,76 @@
+#ifndef __RTTI_OBJECT_FIELD_H__
+#define __RTTI_OBJECT_FIELD_H__
+
+#include "rtti/ObjectTypeInfo.h"
+
+namespace rtti
+{
+
+class ObjectField
+{
+private:
+	void* m_parent_ptr = nullptr;
+	const ObjectFieldTypeInfo* m_field_info = nullptr;
+
+public:
+	ObjectField(std::nullptr_t) noexcept {}
+	ObjectField(void* parent_ptr, const ObjectFieldTypeInfo* field_info) noexcept
+		: m_parent_ptr(parent_ptr)
+		, m_field_info(field_info)
+	{}
+
+	const ObjectFieldTypeInfo* find_subfield_info(std::string_view name) const noexcept
+	{
+		// TODO: remove this check? user must do this? on only in debug mode?
+		if (m_field_info == nullptr)
+			return nullptr;
+
+		const ObjectTypeInfo* object_type_info = m_field_info->get_object_type_info();
+		if (object_type_info == nullptr) {
+			// TODO: log error
+			return nullptr;
+		}
+
+		const object_type_info_fields_info_map_t::const_iterator field_iter
+			= object_type_info->fields_info_map.find(name);
+
+		if (field_iter == object_type_info->fields_info_map.cend()) {
+			// TODO: log
+			std::clog << "Object field of type '" << m_field_info->name << "' does not have subfield '" << name << "'\n";
+			return nullptr;
+		}
+
+		return field_iter->second;
+	}
+
+	ObjectField subfield(std::string_view name) noexcept
+	{
+		// TODO: remove this check? user must do this? on only in debug mode?
+		if (m_field_info == nullptr)
+			return nullptr;
+
+		const ObjectFieldTypeInfo* subfield_info = this->find_subfield_info(name);
+		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
+
+		return { this_ptr, subfield_info };
+	}
+
+	void set_value(const Variant& value) noexcept
+	{
+		// TODO: remove this check? user must do this? on only in debug mode?
+		if (m_field_info == nullptr)
+			return;
+
+		m_field_info->setter(m_parent_ptr, value);
+	}
+
+	ObjectField& operator=(const Variant& value) noexcept
+	{
+		this->set_value(value);
+		return *this;
+	}
+};
+
+}
+
+#endif // !__RTTI_OBJECT_FIELD_H__

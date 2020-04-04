@@ -6,6 +6,8 @@ Currently supported features:
 - enum parsing
 - generation output using **[Jinja](https://palletsprojects.com/p/jinja/)**-like template
 
+# Table of contents (TODO)
+
 # Usage example
 Let's imagine that we have some files:
 
@@ -113,6 +115,56 @@ Enum Direction has type long:
 For more information about tool usage execute command:
 ```bash
 transformer --help
+```
+
+# Beta! RTTI framework for C++
+You can also find a more advanced example of creating a RTTI framework for C++ in the directory [`example/rtti/`](example/rtti/). Some examples with it:
+```c++
+#include "rtti/ObjectType.h"
+
+struct Point2D
+{
+	float x;
+	float y;
+};
+
+struct Point3D : Point2D
+{
+	float z;
+};
+
+// all we need is to inherit from rtti::ObjectType class and use RTTI_OBJECT_TYPE_BODY macro
+class Rect : public rtti::ObjectType<Rect>
+{
+private: // <- we even have access to private fields
+	RTTI_OBJECT_TYPE_BODY;
+
+	std::string name;
+	Point3D top_left;
+	Point3D bot_right;
+};
+
+int main()
+{
+	Rect r {};
+
+	r.object_field("name") = "Hello, Rect!";
+	r.object_field("top_left") = 123; // <- wrong type
+	r.object_field("bot_right") = { { "x", 12345.f } };
+	r.object_field("bot_right").subfield("x") = -1.5f;
+
+	r.object_set_value(
+		{
+			{ "top_left", {
+				{ "x", 123u },
+				{ "z", 3.0  },
+				{ "y", 5.1f },
+			} },
+			{ "name", "New name from " __FILE__ },
+			{ "some name", 123 - 456 }
+		}
+	);
+}
 ```
 
 # Requirements

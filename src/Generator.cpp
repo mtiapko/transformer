@@ -124,6 +124,7 @@ namespace transformer
 		enums_list.emplace_back(Generator::create_enum_tmpl_content(e));
 	}
 
+	// TODO: set to 'env' variable (env.classes, env.file_path...)?
 	inja::json tmpl_content {
 		{ "file_path", cfg.src_file_path().native() },
 		{ "classes",   std::move(classes_list)      },

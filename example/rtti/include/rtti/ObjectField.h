@@ -2,6 +2,7 @@
 #define __RTTI_OBJECT_FIELD_H__
 
 #include "rtti/ObjectTypeInfo.h"
+#include "rtti/Assert.h"
 
 namespace rtti
 {
@@ -21,45 +22,40 @@ public:
 
 	const ObjectFieldTypeInfo* find_subfield_info(std::string_view name) const noexcept
 	{
-		// TODO: remove this check? user must do this? on only in debug mode?
-		if (m_field_info == nullptr)
-			return nullptr;
+		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
+			"Object field not exists. Failed to find subfield '", name, '\'');
 
 		const ObjectTypeInfo* object_type_info = m_field_info->get_object_type_info();
-		if (object_type_info == nullptr) {
-			// TODO: log error
-			return nullptr;
-		}
+		RTTI_ASSERT_RET(object_type_info != nullptr, nullptr, "No RTTI for field '",
+			m_field_info->field_name, "' of type '", m_field_info->name, '\'');
 
 		const object_type_info_fields_info_map_t::const_iterator field_iter
 			= object_type_info->fields_info_map.find(name);
 
-		if (field_iter == object_type_info->fields_info_map.cend()) {
-			// TODO: log
-			std::clog << "Object field of type '" << m_field_info->name << "' does not have subfield '" << name << "'\n";
+		if (field_iter == object_type_info->fields_info_map.cend())
 			return nullptr;
-		}
 
 		return field_iter->second;
 	}
 
 	ObjectField subfield(std::string_view name) noexcept
 	{
-		// TODO: remove this check? user must do this? on only in debug mode?
-		if (m_field_info == nullptr)
-			return nullptr;
-
 		const ObjectFieldTypeInfo* subfield_info = this->find_subfield_info(name);
-		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
 
+		if (m_field_info != nullptr) {
+			RTTI_WARN_ASSERT(subfield_info != nullptr, "Object field '",
+				m_field_info->field_name, "' of type '", m_field_info->name,
+				"' does not have subfield '", name, '\'');
+		}
+
+		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
 		return { this_ptr, subfield_info };
 	}
 
 	void set_value(const Variant& value) noexcept
 	{
-		// TODO: remove this check? user must do this? on only in debug mode?
-		if (m_field_info == nullptr)
-			return;
+		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. "
+			"Failed to set value '", variant_dump_as_string(value), '\'');
 
 		m_field_info->setter(m_parent_ptr, value);
 	}

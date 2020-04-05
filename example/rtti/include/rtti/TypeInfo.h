@@ -6,12 +6,12 @@
 namespace rtti
 {
 
-#ifndef RTTI_NOT_USE_DEFAULT_CONFIG
+#ifndef RTTI_DISABLE_DEFAULT_CONFIG
 
 using type_info_setter_t = void (*)(void*, const Variant&) noexcept;
 using type_info_getter_t = Variant (*)(const void*) noexcept;
 
-#endif // !RTTI_NOT_USE_DEFAULT_CONFIG
+#endif // !RTTI_DISABLE_DEFAULT_CONFIG
 
 struct TypeInfo
 {

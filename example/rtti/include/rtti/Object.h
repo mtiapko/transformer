@@ -26,29 +26,36 @@ public:
 
 	const ObjectFieldTypeInfo* object_find_field_info(std::string_view name) const
 	{
-		const ObjectTypeInfo* info = this->object_type_info();
-		const object_type_info_fields_info_map_t::const_iterator field_iter
-			= info->fields_info_map.find(name);
+		RTTI_ASSERT_RET(m_info != nullptr, nullptr,
+			"No RTTI for object. Failed to find field '", name, '\'');
 
-		if (field_iter == info->fields_info_map.cend()) {
-			// TODO: log
-			std::clog << "Object of type '" << info->name << "' does not have subfield '" << name << "'\n";
+		const object_type_info_fields_info_map_t::const_iterator field_iter
+			= m_info->fields_info_map.find(name);
+
+		if (field_iter == m_info->fields_info_map.cend())
 			return nullptr;
-		}
 
 		return field_iter->second;
 	}
 
+	// TODO(FiTH): use type_info_name_t
 	ObjectField object_field(std::string_view name) noexcept
 	{
-		// TODO: add assert for nullptr
 		const ObjectFieldTypeInfo* field_info = this->object_find_field_info(name);
+
+		if (m_info != nullptr) {
+			RTTI_WARN_ASSERT(field_info != nullptr, "Object of type '",
+				m_info->name, "' does not have field '", name, '\'');
+		}
+
 		return { this, field_info };
 	}
 
 	void object_set_value(const Variant& value) noexcept
 	{
-		// TODO: add assert for nullptr
+		RTTI_ASSERT(m_info != nullptr, "No RTTI for object. "
+			"Failed to set value '", variant_dump_as_string(value), '\'');
+
 		m_info->setter(this, value);
 	}
 };

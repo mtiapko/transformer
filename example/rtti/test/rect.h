@@ -12,6 +12,7 @@ struct Point2D
 struct Point3D : Point2D
 {
 	float z;
+	Point2D point;
 };
 
 class Rect : public rtti::ObjectType<Rect>
@@ -22,6 +23,10 @@ private:
 	std::string name;
 	Point3D top_left;
 	Point3D bot_right;
+
+	std::vector<float> arr;
+	float arr2[5];
+	char str_arr[32];
 
 public:
 	void print() noexcept
@@ -35,7 +40,26 @@ public:
 
 			<< "\t- top_left.x:  " << this->top_left.x << '\n'
 			<< "\t- top_left.y:  " << this->top_left.y << '\n'
-			<< "\t- top_left.z:  " << this->top_left.z << '\n';
+			<< "\t- top_left.z:  " << this->top_left.z << '\n'
+			<< "\t- arr[]:       { ";
+
+		for (const auto& v: arr)
+			std::clog << v << ", ";
+
+		std::clog << "}\n";
+
+		/* arr2 */
+		std::clog
+			<< "\t- arr2[5]:     { ";
+
+		for (const auto& v: arr2)
+			std::clog << v << ", ";
+
+		std::clog << "}\n";
+
+		/* str_arr */
+		std::clog
+			<< "\t- str_arr[32]: \"" << str_arr << "\"\n";
 	}
 };
 

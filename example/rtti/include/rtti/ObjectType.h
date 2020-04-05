@@ -15,7 +15,9 @@ class ObjectType : public Object
 public:
 	ObjectType() noexcept
 		: Object(DB::get_object_type_info<T>())
-	{}
+	{
+		RTTI_WARN_ASSERT(m_info != nullptr, "RTTI for object does not exist");
+	}
 };
 
 }

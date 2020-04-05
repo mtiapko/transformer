@@ -2,6 +2,14 @@
 
 #include "rect.h"
 
+struct S : public rtti::ObjectType<S>
+{
+	RTTI_OBJECT_TYPE_BODY;
+
+	int int_field;
+	float float_field;
+};
+
 void set(rtti::Object* obj) noexcept
 {
 	auto info = obj->object_type_info();
@@ -14,6 +22,9 @@ void set(rtti::Object* obj) noexcept
 
 int main() noexcept
 {
+	S s;
+	s.object_field("int_field") = 1337;
+
 	const auto info = rtti::DB::get_object_type_info<Rect>();
 	if (info == nullptr) {
 		std::clog << "type info for Rect is null!\n";

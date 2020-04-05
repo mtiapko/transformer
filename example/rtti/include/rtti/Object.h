@@ -24,7 +24,7 @@ public:
 		return m_info;
 	}
 
-	const ObjectFieldTypeInfo* object_find_field_info(std::string_view name) const
+	const ObjectFieldTypeInfo* object_find_field_info(std::string_view name) const noexcept
 	{
 		RTTI_ASSERT_RET(m_info != nullptr, nullptr,
 			"No RTTI for object. Failed to find field '", name, '\'');

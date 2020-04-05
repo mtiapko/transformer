@@ -5,6 +5,8 @@
 	TODO(FiTH): allow disable only part of default config?
 		ex.: RTTI_DISABLE_DEFAULT_VARIANT_CONFIG or RTTI_DISABLE_DEFAULT_TYPE_INFO_CONFIG?
 
+	TODO(FiTH): enable/disable RTTI_LOG/RTTI_ASSERT printing file/func/line info
+
 	Used defines:
 		* RTTI_DISABLE_DEFAULT_CONFIG
 			Disable default config (default types).

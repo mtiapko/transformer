@@ -30,7 +30,7 @@ namespace rtti
 
 /* Setters/getters for builtin types */
 
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_VALUE_SET_AND_GET
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 
 #define RTTI_BUILTIN_TYPE_VALUE_SET(builtin_type, variant_type_1, variant_type_2, variant_type_3) \
 	template<> \
@@ -72,11 +72,11 @@ RTTI_BUILTIN_TYPE_VALUE_SET(unsigned long long, unsigned, integer, float)
 RTTI_BUILTIN_TYPE_VALUE_SET(float,  float, integer, unsigned)
 RTTI_BUILTIN_TYPE_VALUE_SET(double, float, integer, unsigned)
 
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_VALUE_SET_AND_GET
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 
 /* Setters/getters for common STL types */
 
-#ifndef RTTI_DISABLE_STL_TYPES_VALUE_SET_AND_GET
+#ifndef RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
 template<> /* static */ void DB::object_set_value<std::string>(std::string* obj, const Variant& value) noexcept
 {
@@ -87,6 +87,6 @@ template<> /* static */ void DB::object_set_value<std::string>(std::string* obj,
 	*obj = *value_data;
 }
 
-#endif // !RTTI_DISABLE_STL_TYPES_VALUE_SET_AND_GET
+#endif // !RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
 }

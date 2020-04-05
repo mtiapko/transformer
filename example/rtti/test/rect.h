@@ -1,6 +1,8 @@
 #ifndef __RECT_H__
 #define __RECT_H__
 
+#include <iostream>
+
 #include "rtti/ObjectType.h"
 
 struct Point2D

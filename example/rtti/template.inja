@@ -1,3 +1,4 @@
+#include <iostream>
 #include "rtti/DB.h"
 
 #ifndef RTTI_DISABLE_DEFAULT_VARIANT

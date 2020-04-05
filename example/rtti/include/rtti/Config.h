@@ -24,15 +24,27 @@
 			Disable warning asserts.
 		* RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
 			Disable 'DB::object_set_value_default' method.
-		* RTTI_DISABLE_BUILTIN_TYPES_VALUE_SET_AND_GET
+		* RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 			Disable default setters/getters for builtin types (int, float, ...)
-		* RTTI_DISABLE_STL_TYPES_VALUE_SET_AND_GET
+		* RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 			Disable default setters/getters for common STL types (string, vector, ...).
 
 */
 
 // TODO(FiTH): remove after debug
+
+// #define RTTI_DISABLE_DEFAULT_CONFIG
+// #define RTTI_DISABLE_DEFAULT_VARIANT
+// #define RTTI_DISABLE_DEFAULT_VARIANT_HELPERS
+
+// #define RTTI_DISABLE_LOG
+// #define RTTI_DISABLE_ASSERT
 #define RTTI_DISABLE_ASSERT_EXIT_ON_FAIL
+// #define RTTI_DISABLE_ASSERT_PRINT
+// #define RTTI_DISABLE_WARN_ASSERT
+// #define RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+// #define RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+// #define RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
 /* External config that can override or extend default config */
 #ifdef RTTI_EXTERNAL_CONFIG_PATH

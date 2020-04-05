@@ -45,7 +45,8 @@
 #define RTTI_ASSERT(x, ...) RTTI_ASSERT_RET(x, /* no ret */, __VA_ARGS__)
 
 #else
-#	define RTTI_ASSERT(...)
+#	define RTTI_ASSERT_RET(...) /* empty */
+#	define RTTI_ASSERT(...)     /* empty */
 #endif // !RTTI_DISABLE_ASSERT
 
 /* RTTI warning assert */
@@ -53,8 +54,9 @@
 #ifndef RTTI_DISABLE_WARN_ASSERT
 
 #define RTTI_WARN_ASSERT(x, ...) \
-	if (!(x)) \
-		RTTI_LOG_WARN_IMPL("Warning assert '" #x "' failed. ", __VA_ARGS__);
+	if (!(x)) { \
+		RTTI_LOG_WARN_IMPL("Warning assert '" #x "' failed. ", __VA_ARGS__); \
+	}
 
 #else
 #	define RTTI_WARN_ASSERT(...) /* empty */

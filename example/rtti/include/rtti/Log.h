@@ -42,9 +42,14 @@ public:
 #	define RTTI_PRINT(...)     /* empty */
 #	define RTTI_PRINT_ERR(...) /* empty */
 
-#	define RTTI_LOG(...)       /* empty */
-#	define RTTI_LOG_WARN(...)  /* empty */
-#	define RTTI_LOG_ERR(...)   /* empty */
+#	define RTTI_LOG_IMPL(...) /* empty */
+#	define RTTI_LOG(...)      /* empty */
+
+#	define RTTI_LOG_WARN_IMPL(...) /* empty */
+#	define RTTI_LOG_WARN(...)      /* empty */
+
+#	define RTTI_LOG_ERR_IMPL(...) /* empty */
+#	define RTTI_LOG_ERR(...)      /* empty */
 #endif // !RTTI_DISABLE_LOG
 
 #endif // !__RTTI_LOG_H__

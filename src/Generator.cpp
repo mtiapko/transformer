@@ -64,11 +64,11 @@ namespace transformer
 	};
 
 	if (f.is_array_type()) {
-		j.emplace(/* field_ */ "element_type", f.element_type());
+		j.emplace(/* field_ */ "array_element_type", f.element_type());
 		j.emplace(/* field_ */ "is_incomplete_array", f.is_incomplete_array());
 
 		if (!f.is_incomplete_array())
-			j.emplace(/* field_ */ "elements_counts", f.elements_counts());
+			j.emplace(/* field_ */ "array_elements_count", f.elements_count());
 	}
 
 	return j;

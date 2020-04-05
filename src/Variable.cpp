@@ -26,7 +26,7 @@ Variable::Variable(CXCursor cur) noexcept
 			)
 		);
 
-		m_elements_counts = (kind == CXType_ConstantArray
+		m_elements_count = (kind == CXType_ConstantArray
 			? clang_getArraySize(cxtype)
 			: std::numeric_limits<size_t>::max());
 	}

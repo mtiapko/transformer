@@ -20,13 +20,13 @@ public:
 		, m_field_info(field_info)
 	{}
 
-	const ObjectFieldTypeInfo* find_subfield_info(type_info_name_t name) const noexcept
+	const ObjectFieldTypeInfo* find_subfield_info(type_info_name_view_t name) const noexcept
 	{
 		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
-			"Object field not exists. Failed to find subfield '", name, '\'');
+			"Object field not exists. Failed to find subfield '", name, "' info");
 
 		const ObjectTypeInfo* object_type_info = m_field_info->get_object_type_info();
-		RTTI_ASSERT_RET(object_type_info != nullptr, nullptr, "No RTTI for field '",
+		RTTI_ASSERT_RET(object_type_info != nullptr, nullptr, "No RTTI for object field '",
 			m_field_info->field_name, "' of type '", m_field_info->name, '\'');
 
 		const object_type_info_fields_info_map_t::const_iterator field_iter
@@ -38,15 +38,16 @@ public:
 		return field_iter->second;
 	}
 
-	ObjectField subfield(type_info_name_t name) noexcept
+	ObjectField subfield(type_info_name_view_t name) noexcept
 	{
+		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
+			"Object field not exists. Failed to get subfield '", name, '\'');
+
 		const ObjectFieldTypeInfo* subfield_info = this->find_subfield_info(name);
 
-		if (m_field_info != nullptr) {
-			RTTI_WARN_ASSERT(subfield_info != nullptr, "Object field '",
-				m_field_info->field_name, "' of type '", m_field_info->name,
-				"' does not have subfield '", name, '\'');
-		}
+		RTTI_WARN_ASSERT(subfield_info != nullptr, "Object field '", (m_field_info != nullptr
+			? m_field_info->field_name : "<no RTTI>"), "' of type '", m_field_info->name,
+			"' does not have subfield '", name, '\'');
 
 		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
 		return { this_ptr, subfield_info };
@@ -65,6 +66,17 @@ public:
 		this->set_value(value);
 		return *this;
 	}
+
+
+	void get_value(Variant& value) const noexcept
+	{
+		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. Failed to get its value");
+
+		m_field_info->getter(m_parent_ptr, value);
+	}
+
+	Variant get_value() const noexcept;
+	operator Variant() const noexcept;
 };
 
 }

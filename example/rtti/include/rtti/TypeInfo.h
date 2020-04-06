@@ -1,7 +1,7 @@
 #ifndef __RTTI_TYPE_INFO_H__
 #define __RTTI_TYPE_INFO_H__
 
-#include "rtti/Variant.h"
+#include "rtti/VariantFwd.h"
 
 namespace rtti
 {
@@ -9,7 +9,7 @@ namespace rtti
 #ifndef RTTI_DISABLE_DEFAULT_CONFIG
 
 using type_info_setter_t = void (*)(void*, const Variant&) noexcept;
-using type_info_getter_t = Variant (*)(const void*) noexcept;
+using type_info_getter_t = void (*)(const void*, Variant&) noexcept;
 
 #endif // !RTTI_DISABLE_DEFAULT_CONFIG
 

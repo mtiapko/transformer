@@ -15,6 +15,7 @@ class DB
 private:
 #ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 	static void object_set_value_default(void* obj, const Variant& value, const ObjectTypeInfo* info) noexcept;
+	static void object_get_value_default(const void* obj, Variant& value, const ObjectTypeInfo* info) noexcept;
 #endif
 
 public:
@@ -26,6 +27,8 @@ public:
 	{
 		return nullptr;
 	}
+
+	// TODO(FiTH): add comments for blocks
 
 	template<typename T>
 	static void object_set_value(T* obj, const Variant& value) noexcept
@@ -91,8 +94,51 @@ public:
 		}
 	}
 
+	template<typename T>
+	static void object_get_value(const std::vector<T>* vec, Variant& array) noexcept
+	{
+		variant_array_vector_t& array_vec = variant_make_array(array);
+		array_vec.reserve(vec->size());
+
+		for (const T& value: *vec)
+			array_vec.emplace_back(value);
+	}
+
 #endif // !RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
+	template<typename T>
+	static void object_get_value(const T* obj, Variant& value) noexcept
+	{
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+
+		const ObjectTypeInfo* info = DB::get_object_type_info<T>();
+
+		RTTI_ASSERT(info != nullptr, "Failed to get value from object with no RTTI");
+
+		DB::object_get_value_default(obj, value, info);
+
+#else
+		RTTI_UNUSED(obj);
+		RTTI_UNUSED(value);
+#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+	}
+
+	template<typename T, size_t N>
+	static void object_get_value(const T (&arr)[N], Variant& array) noexcept
+	{
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+
+		variant_array_vector_t& array_vec = variant_make_array(array);
+		array_vec.reserve(N);
+
+		for (const T& value: arr)
+			array_vec.emplace_back(value);
+
+#else
+		RTTI_UNUSED(arr);
+		RTTI_UNUSED(array);
+#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+	}
 };
 
 }

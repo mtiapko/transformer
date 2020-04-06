@@ -1,4 +1,4 @@
-#include <nlohmann/json.hpp>
+#include "rtti/Variant.h"
 
 #include "rect.h"
 
@@ -14,7 +14,6 @@ void set(rtti::Object* obj) noexcept
 {
 	auto info = obj->object_type_info();
 	for (const auto& f: info->fields_info) {
-		std::clog << "set " << f.field_name << " to 7\n";
 		obj->object_field(f.field_name) = { { "x", 7 } };
 		obj->object_field(f.field_name) = "Hello!";
 	}
@@ -54,6 +53,7 @@ int main() noexcept
 	r.print();
 
 	std::clog << "\t-----===== Test #1 =====-----\n";
+	r.object_field("top_left") = { { "x", 1 }, { "z", -99 } };
 	r.object_field("top_left") = 123;
 
 	r.object_field("bot_right") = { { "x", 12345.f } };
@@ -66,6 +66,12 @@ int main() noexcept
 	std::clog << "\t-----===== Test #2 =====-----\n";
 	r.object_set_value(
 		{
+			{ "bot_right", {
+				{ "point", {
+					{ "y",   234.345f },
+					{ "zzz", -1       }
+				} }
+			} },
 			{ "top_left", {
 				{ "x", 123u },
 				{ "z", 3.0  },
@@ -77,6 +83,8 @@ int main() noexcept
 	);
 
 	r.print();
+
+	std::clog << r.object_get_value().dump(4, ' ') << '\n';
 
 	return EXIT_SUCCESS;
 }

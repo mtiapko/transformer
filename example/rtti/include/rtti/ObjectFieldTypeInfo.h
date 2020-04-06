@@ -8,7 +8,7 @@ namespace rtti
 
 struct ObjectFieldTypeInfo : public TypeInfo
 {
-	object_field_type_info_name_t field_name;
+	object_field_type_info_field_name_t field_name;
 
 	object_field_type_info_get_addr_t             get_addr;
 	object_field_type_info_get_object_type_info_t get_object_type_info;

@@ -11,7 +11,7 @@
 		* RTTI_DISABLE_DEFAULT_CONFIG
 			Disable default config (default types).
 		* RTTI_DISABLE_DEFAULT_VARIANT
-			Disable default Variant that uses <nlohmann/json.hpp>. User must provide another Variant.
+			Disable default Variant that using <nlohmann/json.hpp>. User must provide another Variant.
 		* RTTI_DISABLE_DEFAULT_VARIANT_HELPERS
 			Disable default Variant helpers.
 		* RTTI_DISABLE_LOG
@@ -86,10 +86,12 @@ using variant_type_name_t      = std::string_view;
 using variant_dump_as_string_t = std::string;
 
 /* TypeInfo config */
-using type_info_name_t = std::string_view;
+using type_info_name_t      = std::string;
+using type_info_name_view_t = std::string;
+// TODO(FiTH): make it std::string_view when std::unordered_map will support '.find' by string_view
 
 /* ObjectFieldTypeInfo config */
-using object_field_type_info_name_t                 = std::string_view;
+using object_field_type_info_field_name_t           = std::string;
 using object_field_type_info_get_addr_t             = void* (*)(void*) noexcept;
 using object_field_type_info_get_object_type_info_t = const struct ObjectTypeInfo* (*)() noexcept;
 

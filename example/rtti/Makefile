@@ -8,7 +8,7 @@ CC_DEFINES :=
 LD_FLAGS :=
 LD_LIBS :=
 
-SRC_DIR := src test
+SRC_DIR := src src/DB test
 OBJ_DIR := bin/obj
 
 SRC := $(wildcard $(addsuffix /*.cpp, $(SRC_DIR)))

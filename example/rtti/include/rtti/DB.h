@@ -13,7 +13,7 @@ namespace rtti
 class DB
 {
 private:
-#ifndef RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 	static void object_set_value_default(void* obj, const Variant& value, const ObjectTypeInfo* info) noexcept;
 #endif
 
@@ -30,7 +30,7 @@ public:
 	template<typename T>
 	static void object_set_value(T* obj, const Variant& value) noexcept
 	{
-#ifndef RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 
 		const ObjectTypeInfo* info = DB::get_object_type_info<T>();
 
@@ -42,7 +42,7 @@ public:
 #else
 		RTTI_UNUSED(obj);
 		RTTI_UNUSED(value);
-#endif // !RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 	}
 
 	// TODO(FiTH): add multidimensional array support

@@ -24,7 +24,7 @@
 			Disable printing 'assert' information.
 		* RTTI_DISABLE_WARN_ASSERT
 			Disable warning asserts.
-		* RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+		* RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 			Disable 'DB::object_set_value_default' method.
 		* RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 			Disable default setters/getters for builtin types (int, float, ...)
@@ -44,7 +44,7 @@
 #define RTTI_DISABLE_ASSERT_EXIT_ON_FAIL
 // #define RTTI_DISABLE_ASSERT_PRINT
 // #define RTTI_DISABLE_WARN_ASSERT
-// #define RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+// #define RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 // #define RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 // #define RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 

@@ -9,7 +9,7 @@ namespace rtti
 
 /* Implementation of 'DB::object_set_value_default' */
 
-#ifndef RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 
 /* static */ void DB::object_set_value_default(void* obj, const Variant& object, const ObjectTypeInfo* info) noexcept
 {
@@ -26,7 +26,7 @@ namespace rtti
 	}
 }
 
-#endif // !RTTI_DISABLE_OBJECT_SET_AND_GET_VALUE_DEFAULT
+#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 
 /* Setters/getters for builtin types */
 

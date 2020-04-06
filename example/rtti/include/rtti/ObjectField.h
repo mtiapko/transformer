@@ -20,7 +20,7 @@ public:
 		, m_field_info(field_info)
 	{}
 
-	const ObjectFieldTypeInfo* find_subfield_info(std::string_view name) const noexcept
+	const ObjectFieldTypeInfo* find_subfield_info(type_info_name_t name) const noexcept
 	{
 		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
 			"Object field not exists. Failed to find subfield '", name, '\'');
@@ -38,7 +38,7 @@ public:
 		return field_iter->second;
 	}
 
-	ObjectField subfield(std::string_view name) noexcept
+	ObjectField subfield(type_info_name_t name) noexcept
 	{
 		const ObjectFieldTypeInfo* subfield_info = this->find_subfield_info(name);
 

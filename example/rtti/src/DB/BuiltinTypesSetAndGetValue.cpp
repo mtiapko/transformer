@@ -7,16 +7,16 @@
 	template<> \
 	/* static */ void DB::object_set_value<builtin_type>(builtin_type* obj, const Variant& value) noexcept \
 	{ \
-		if (value.type() == Variant::value_t::number_##variant_type_1) { \
-			auto value_data = value.get_ptr<const Variant::number_##variant_type_1##_t*>(); \
+		if (value.is_number_##variant_type_1()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_1##_t*>(); \
 			*obj = *value_data; \
-		} else if (value.type() == Variant::value_t::number_##variant_type_2) { \
-			auto value_data = value.get_ptr<const Variant::number_##variant_type_2##_t*>(); \
+		} else if (value.is_number_##variant_type_2()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_2##_t*>(); \
 			*obj = *value_data; \
-		} else if (value.type() == Variant::value_t::number_##variant_type_3) { \
-			auto value_data = value.get_ptr<const Variant::number_##variant_type_3##_t*>(); \
+		} else if (value.is_number_##variant_type_3()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_3##_t*>(); \
 			*obj = *value_data; \
-		} else if (value.type() == Variant::value_t::null) { \
+		} else if (value.is_null()) { \
 			*obj = {}; \
 		} else { \
 			RTTI_ASSERT(false, RTTI_DB_PRINT_FAILED_TO_SET_VALUE_FMT( \
@@ -35,6 +35,9 @@ namespace rtti
 
 /* Char (not signed and not unsigned, like 0) */
 RTTI_BUILTIN_TYPE_SET_AND_GET_VALUE(char, integer, unsigned, float)
+
+/* Bool */
+RTTI_BUILTIN_TYPE_SET_AND_GET_VALUE(bool, integer, unsigned, float)
 
 /* Signed integers */
 RTTI_BUILTIN_TYPE_SET_AND_GET_VALUE(signed char,        integer, unsigned, float)

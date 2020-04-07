@@ -4,8 +4,6 @@
 namespace rtti
 {
 
-// TODO(FiTH): remove file and do this set/get in .h?
-
 /* Implementation of 'DB::object_set_value_default' and 'DB::object_get_value_default' */
 
 #ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT

@@ -6,6 +6,7 @@
 namespace rtti
 {
 
+// TODO(FiTH): add 'parants_info', 'parents_info_set' and 'runtime_cast' (in Object)
 struct ObjectTypeInfo : public TypeInfo
 {
 	object_type_info_fields_info_t     fields_info;

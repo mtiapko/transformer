@@ -10,310 +10,91 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 namespace rtti
 {
 
-/* info */
+/* * * * * * * * * * * * * * * * * * * * * * *
 
+		Point2D
+
+* * * * * * * * * * * * * * * * * * * * * * * */
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Point2D>() noexcept
 {
+	/* x */
+	auto x_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto x_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto x_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point2D*)parent_ptr)->x;
+	};
+
+	/* y */
+	auto y_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto y_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto y_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point2D*)parent_ptr)->y;
+	};
+
 	ObjectTypeInfo info {
-	/* TypeInfo */
-	{
-		"Point2D",
-		(type_info_setter_t)
-			(void (*)(Point2D*, const Variant&) noexcept)
-				&DB::object_set_value<Point2D>, // TODO: remove <>?
-		(type_info_getter_t)
-			(void (*)(const Point2D*, Variant&) noexcept)
-				&DB::object_get_value<Point2D>,
-	},
-	/* ObjectTypeInfo */
-	{
+		/* TypeInfo */
 		{
-			/* TypeInfo */
-			{
-				"float", /* type: float */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-				auto this_ptr = (Point2D*)inst;
-				if constexpr (std::is_floating_point_v<float>) {
-					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_unsigned_v<float>) {
-					if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_signed_v<float>) {
-					if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else {
-					extern void not_existing_func();
-					not_existing_func();
-
-					std::cerr << "Error! Unexpected type 'float' of 'Point2D::x'\n";
-				}
-#else
-
-// TODO: code duplication
-					DB::object_set_value /* <float> */ (&((Point2D*)inst)->x, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-					value = ((const Point2D*)obj)->x;
-#else
-
-					DB::object_get_value(&((const Point2D*)obj)->x, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "x",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Point2D*)this_ptr)->x;
-			},
-			&DB::get_object_type_info<float>
+			/* name   */ "Point2D",
+			/* setter */ (type_info_setter_t)(void (*)(Point2D*, const Variant&) noexcept)
+				&DB::object_set_value,
+			/* getter */ (type_info_getter_t)(void (*)(const Point2D*, Variant&) noexcept)
+				&DB::object_get_value
 		},
+		/* ObjectTypeInfo */
+		/* fields_info */
 		{
-			/* TypeInfo */
 			{
-				"float", /* type: float */
-				/* setter */ [](void* inst, const Variant& value) noexcept
+				/* type_info */
 				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-				auto this_ptr = (Point2D*)inst;
-				if constexpr (std::is_floating_point_v<float>) {
-					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_unsigned_v<float>) {
-					if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_signed_v<float>) {
-					if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else {
-					extern void not_existing_func();
-					not_existing_func();
-
-					std::cerr << "Error! Unexpected type 'float' of 'Point2D::y'\n";
-				}
-#else
-
-// TODO: code duplication
-					DB::object_set_value /* <float> */ (&((Point2D*)inst)->y, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
+					/* name   */ "float",
+					/* setter */ x_setter,
+					/* getter */ x_getter
 				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-					value = ((const Point2D*)obj)->y;
-#else
-
-					DB::object_get_value(&((const Point2D*)obj)->y, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
+				/* name                 */ "x",
+				/* get_addr             */ x_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float>
 			},
-			/* ObjectFieldInfo */
-			/* name */ "y",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
-				return &((Point2D*)this_ptr)->y;
+				/* type_info */
+				{
+					/* name   */ "float",
+					/* setter */ y_setter,
+					/* getter */ y_getter
+				},
+				/* name                 */ "y",
+				/* get_addr             */ y_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float>
 			},
-			&DB::get_object_type_info<float>
 		},
-	},
-	{
-		{ "x", &info.fields_info[0] },
-		{ "y", &info.fields_info[1] },
-	}
-};
+		/* fields_info_map */
+		{
+			{ "x", &info.fields_info[0] },
+			{ "y", &info.fields_info[1] },
+		}
+	};
 
 	return info;
 }
@@ -325,490 +106,158 @@ static const ObjectTypeInfo info_0 = DB::make_object_type_info<Point2D>();
 
 } /* namespace <anonymous> */
 
-/* DB::get_object_type_info() */
-
 template<>
 /* static */ const ObjectTypeInfo* DB::get_object_type_info<Point2D>() noexcept
 {
 	return &info_0;
 }
 
-} /* namespace rtti */
 
-namespace rtti
-{
+/* * * * * * * * * * * * * * * * * * * * * * *
 
-/* info */
+		Point3D
 
+* * * * * * * * * * * * * * * * * * * * * * * */
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Point3D>() noexcept
 {
+	/* x */
+	auto x_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto x_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto x_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point3D*)parent_ptr)->x;
+	};
+
+	/* y */
+	auto y_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto y_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto y_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point3D*)parent_ptr)->y;
+	};
+
+	/* z */
+	auto z_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto z_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto z_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point3D*)parent_ptr)->z;
+	};
+
+	/* point */
+	auto point_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto point_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto point_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Point3D*)parent_ptr)->point;
+	};
+
 	ObjectTypeInfo info {
-	/* TypeInfo */
-	{
-		"Point3D",
-		(type_info_setter_t)
-			(void (*)(Point3D*, const Variant&) noexcept)
-				&DB::object_set_value<Point3D>, // TODO: remove <>?
-		(type_info_getter_t)
-			(void (*)(const Point3D*, Variant&) noexcept)
-				&DB::object_get_value<Point3D>,
-	},
-	/* ObjectTypeInfo */
-	{
+		/* TypeInfo */
 		{
-			/* TypeInfo */
-			{
-				"float", /* type: float */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-				auto this_ptr = (Point3D*)inst;
-				if constexpr (std::is_floating_point_v<float>) {
-					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_unsigned_v<float>) {
-					if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_signed_v<float>) {
-					if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::x type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::x setted to " << *v << '\n';
-						this_ptr->x = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else {
-					extern void not_existing_func();
-					not_existing_func();
-
-					std::cerr << "Error! Unexpected type 'float' of 'Point2D::x'\n";
-				}
-#else
-
-// TODO: code duplication
-					DB::object_set_value /* <float> */ (&((Point3D*)inst)->x, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-					value = ((const Point3D*)obj)->x;
-#else
-
-					DB::object_get_value(&((const Point3D*)obj)->x, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "x",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Point3D*)this_ptr)->x;
-			},
-			&DB::get_object_type_info<float>
+			/* name   */ "Point3D",
+			/* setter */ (type_info_setter_t)(void (*)(Point3D*, const Variant&) noexcept)
+				&DB::object_set_value,
+			/* getter */ (type_info_getter_t)(void (*)(const Point3D*, Variant&) noexcept)
+				&DB::object_get_value
 		},
+		/* ObjectTypeInfo */
+		/* fields_info */
 		{
-			/* TypeInfo */
 			{
-				"float", /* type: float */
-				/* setter */ [](void* inst, const Variant& value) noexcept
+				/* type_info */
 				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-				auto this_ptr = (Point3D*)inst;
-				if constexpr (std::is_floating_point_v<float>) {
-					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_unsigned_v<float>) {
-					if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_signed_v<float>) {
-					if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point2D::y type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point2D::y setted to " << *v << '\n';
-						this_ptr->y = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else {
-					extern void not_existing_func();
-					not_existing_func();
-
-					std::cerr << "Error! Unexpected type 'float' of 'Point2D::y'\n";
-				}
-#else
-
-// TODO: code duplication
-					DB::object_set_value /* <float> */ (&((Point3D*)inst)->y, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
+					/* name   */ "float",
+					/* setter */ x_setter,
+					/* getter */ x_getter
 				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-					value = ((const Point3D*)obj)->y;
-#else
-
-					DB::object_get_value(&((const Point3D*)obj)->y, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
+				/* name                 */ "x",
+				/* get_addr             */ x_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float>
 			},
-			/* ObjectFieldInfo */
-			/* name */ "y",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
-				return &((Point3D*)this_ptr)->y;
+				/* type_info */
+				{
+					/* name   */ "float",
+					/* setter */ y_setter,
+					/* getter */ y_getter
+				},
+				/* name                 */ "y",
+				/* get_addr             */ y_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float>
 			},
-			&DB::get_object_type_info<float>
+			{
+				/* type_info */
+				{
+					/* name   */ "float",
+					/* setter */ z_setter,
+					/* getter */ z_getter
+				},
+				/* name                 */ "z",
+				/* get_addr             */ z_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float>
+			},
+			{
+				/* type_info */
+				{
+					/* name   */ "Point2D",
+					/* setter */ point_setter,
+					/* getter */ point_getter
+				},
+				/* name                 */ "point",
+				/* get_addr             */ point_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<Point2D>
+			},
 		},
+		/* fields_info_map */
 		{
-			/* TypeInfo */
-			{
-				"float", /* type: float */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-				auto this_ptr = (Point3D*)inst;
-				if constexpr (std::is_floating_point_v<float>) {
-					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_unsigned_v<float>) {
-					if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else if constexpr (std::is_signed_v<float>) {
-					if (value.type() == Variant::value_t::number_integer) {
-						const auto v = value.get_ptr<const Variant::number_integer_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Integer>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_unsigned) {
-						const auto v = value.get_ptr<const Variant::number_unsigned_t*>();
-						if (v == nullptr) {
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Unsigned>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else if (value.type() == Variant::value_t::number_float) {
-						const auto v = value.get_ptr<const Variant::number_float_t*>();
-						if (v == nullptr) {
-							// TODO: rewrite error msg
-							std::cerr << "Error! Point3D::z type mismatch: 'float' and '" << value.type_name() << "'\n";
-							return;
-						}
-
-						std::clog << "Success! <Float>: Point3D::z setted to " << *v << '\n';
-						this_ptr->z = static_cast<float>(*v);
-					} else {
-						std::cerr << "Error! Unexpected value type '" << value.type_name() << "': " << value << '\n';
-					}
-				} else {
-					extern void not_existing_func();
-					not_existing_func();
-
-					std::cerr << "Error! Unexpected type 'float' of 'Point3D::z'\n";
-				}
-#else
-
-// TODO: code duplication
-					DB::object_set_value /* <float> */ (&((Point3D*)inst)->z, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-					value = ((const Point3D*)obj)->z;
-#else
-
-					DB::object_get_value(&((const Point3D*)obj)->z, value);
-
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "z",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Point3D*)this_ptr)->z;
-			},
-			&DB::get_object_type_info<float>
-		},
-		{
-			/* TypeInfo */
-			{
-				"Point2D", /* type: Point2D */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value /* <Point2D> */ (&((Point3D*)inst)->point, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value(&((const Point3D*)obj)->point, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "point",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Point3D*)this_ptr)->point;
-			},
-			&DB::get_object_type_info<Point2D>
-		},
-	},
-	{
-		{ "x", &info.fields_info[0] },
-		{ "y", &info.fields_info[1] },
-		{ "z", &info.fields_info[2] },
-		{ "point", &info.fields_info[3] },
-	}
-};
+			{ "x", &info.fields_info[0] },
+			{ "y", &info.fields_info[1] },
+			{ "z", &info.fields_info[2] },
+			{ "point", &info.fields_info[3] },
+		}
+	};
 
 	return info;
 }
@@ -820,197 +269,218 @@ static const ObjectTypeInfo info_1 = DB::make_object_type_info<Point3D>();
 
 } /* namespace <anonymous> */
 
-/* DB::get_object_type_info() */
-
 template<>
 /* static */ const ObjectTypeInfo* DB::get_object_type_info<Point3D>() noexcept
 {
 	return &info_1;
 }
 
-} /* namespace rtti */
 
-namespace rtti
-{
+/* * * * * * * * * * * * * * * * * * * * * * *
 
-/* info */
+		Rect
 
+* * * * * * * * * * * * * * * * * * * * * * * */
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Rect>() noexcept
 {
+	/* name */
+	auto name_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto name_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto name_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->name;
+	};
+
+	/* top_left */
+	auto top_left_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto top_left_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto top_left_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->top_left;
+	};
+
+	/* bot_right */
+	auto bot_right_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto bot_right_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto bot_right_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->bot_right;
+	};
+
+	/* arr */
+	auto arr_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto arr_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto arr_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->arr;
+	};
+
+	/* arr2 */
+	auto arr2_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto arr2_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto arr2_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->arr2;
+	};
+
+	/* str_arr */
+	auto str_arr_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto str_arr_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		RTTI_UNUSED(ptr);
+		RTTI_UNUSED(value);
+	};
+
+	auto str_arr_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &((Rect*)parent_ptr)->str_arr;
+	};
+
 	ObjectTypeInfo info {
-	/* TypeInfo */
-	{
-		"Rect",
-		(type_info_setter_t)
-			(void (*)(Rect*, const Variant&) noexcept)
-				&DB::object_set_value<Rect>, // TODO: remove <>?
-		(type_info_getter_t)
-			(void (*)(const Rect*, Variant&) noexcept)
-				&DB::object_get_value<Rect>,
-	},
-	/* ObjectTypeInfo */
-	{
+		/* TypeInfo */
 		{
-			/* TypeInfo */
-			{
-				"std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >", /* type: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value /* <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >> */ (&((Rect*)inst)->name, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value(&((const Rect*)obj)->name, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "name",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Rect*)this_ptr)->name;
-			},
-			&DB::get_object_type_info<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >>
+			/* name   */ "Rect",
+			/* setter */ (type_info_setter_t)(void (*)(Rect*, const Variant&) noexcept)
+				&DB::object_set_value,
+			/* getter */ (type_info_getter_t)(void (*)(const Rect*, Variant&) noexcept)
+				&DB::object_get_value
 		},
+		/* ObjectTypeInfo */
+		/* fields_info */
 		{
-			/* TypeInfo */
 			{
-				"Point3D", /* type: Point3D */
-				/* setter */ [](void* inst, const Variant& value) noexcept
+				/* type_info */
 				{
-
-					DB::object_set_value /* <Point3D> */ (&((Rect*)inst)->top_left, value);
-
+					/* name   */ "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+					/* setter */ name_setter,
+					/* getter */ name_getter
 				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value(&((const Rect*)obj)->top_left, value);
-
-				},
+				/* name                 */ "name",
+				/* get_addr             */ name_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >>
 			},
-			/* ObjectFieldInfo */
-			/* name */ "top_left",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
-				return &((Rect*)this_ptr)->top_left;
+				/* type_info */
+				{
+					/* name   */ "Point3D",
+					/* setter */ top_left_setter,
+					/* getter */ top_left_getter
+				},
+				/* name                 */ "top_left",
+				/* get_addr             */ top_left_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<Point3D>
 			},
-			&DB::get_object_type_info<Point3D>
+			{
+				/* type_info */
+				{
+					/* name   */ "Point3D",
+					/* setter */ bot_right_setter,
+					/* getter */ bot_right_getter
+				},
+				/* name                 */ "bot_right",
+				/* get_addr             */ bot_right_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<Point3D>
+			},
+			{
+				/* type_info */
+				{
+					/* name   */ "std::vector<float, std::allocator<float> >",
+					/* setter */ arr_setter,
+					/* getter */ arr_getter
+				},
+				/* name                 */ "arr",
+				/* get_addr             */ arr_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<std::vector<float, std::allocator<float> >>
+			},
+			{
+				/* type_info */
+				{
+					/* name   */ "float [5]",
+					/* setter */ arr2_setter,
+					/* getter */ arr2_getter
+				},
+				/* name                 */ "arr2",
+				/* get_addr             */ arr2_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<float [5]>
+			},
+			{
+				/* type_info */
+				{
+					/* name   */ "char [16]",
+					/* setter */ str_arr_setter,
+					/* getter */ str_arr_getter
+				},
+				/* name                 */ "str_arr",
+				/* get_addr             */ str_arr_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<char [16]>
+			},
 		},
+		/* fields_info_map */
 		{
-			/* TypeInfo */
-			{
-				"Point3D", /* type: Point3D */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value /* <Point3D> */ (&((Rect*)inst)->bot_right, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value(&((const Rect*)obj)->bot_right, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "bot_right",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Rect*)this_ptr)->bot_right;
-			},
-			&DB::get_object_type_info<Point3D>
-		},
-		{
-			/* TypeInfo */
-			{
-				"std::vector<float, std::allocator<float> >", /* type: std::vector<float, std::allocator<float> > */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value /* <std::vector<float, std::allocator<float> >> */ (&((Rect*)inst)->arr, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value(&((const Rect*)obj)->arr, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "arr",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Rect*)this_ptr)->arr;
-			},
-			&DB::get_object_type_info<std::vector<float, std::allocator<float> >>
-		},
-		{
-			/* TypeInfo */
-			{
-				"float [5]", /* type: float [5] */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value<float, 5>(((Rect*)inst)->arr2, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value<float, 5>(((const Rect*)obj)->arr2, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "arr2",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Rect*)this_ptr)->arr2;
-			},
-			&DB::get_object_type_info<float [5]>
-		},
-		{
-			/* TypeInfo */
-			{
-				"char [16]", /* type: char [16] */
-				/* setter */ [](void* inst, const Variant& value) noexcept
-				{
-
-					DB::object_set_value<char, 16>(((Rect*)inst)->str_arr, value);
-
-				},
-				/* getter */ [](const void* obj, Variant& value) noexcept
-				{
-
-					DB::object_get_value<char, 16>(((const Rect*)obj)->str_arr, value);
-
-				},
-			},
-			/* ObjectFieldInfo */
-			/* name */ "str_arr",
-			/* get addr */ [](void* this_ptr) noexcept -> void*
-			{
-				return &((Rect*)this_ptr)->str_arr;
-			},
-			&DB::get_object_type_info<char [16]>
-		},
-	},
-	{
-		{ "name", &info.fields_info[0] },
-		{ "top_left", &info.fields_info[1] },
-		{ "bot_right", &info.fields_info[2] },
-		{ "arr", &info.fields_info[3] },
-		{ "arr2", &info.fields_info[4] },
-		{ "str_arr", &info.fields_info[5] },
-	}
-};
+			{ "name", &info.fields_info[0] },
+			{ "top_left", &info.fields_info[1] },
+			{ "bot_right", &info.fields_info[2] },
+			{ "arr", &info.fields_info[3] },
+			{ "arr2", &info.fields_info[4] },
+			{ "str_arr", &info.fields_info[5] },
+		}
+	};
 
 	return info;
 }
@@ -1022,8 +492,6 @@ static const ObjectTypeInfo info_2 = DB::make_object_type_info<Rect>();
 
 } /* namespace <anonymous> */
 
-/* DB::get_object_type_info() */
-
 template<>
 /* static */ const ObjectTypeInfo* DB::get_object_type_info<Rect>() noexcept
 {
@@ -1031,4 +499,3 @@ template<>
 }
 
 } /* namespace rtti */
-

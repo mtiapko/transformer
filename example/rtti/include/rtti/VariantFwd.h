@@ -40,13 +40,11 @@ namespace rtti
 template<template<typename...> typename T>
 bool variant_holds_alternative(const Variant& value) noexcept;
 
-// TODO(FiTH): add _get version
-variant_array_vector_t& variant_make_array(Variant& value) noexcept;
-
-// TODO(FiTH): remove?
+void           variant_make_array(Variant& value) noexcept;
 size_t         variant_array_size(const Variant& array) noexcept;
-Variant*       variant_array_element(Variant& array, size_t i) noexcept;
-const Variant* variant_array_element(const Variant& array, size_t i) noexcept;
+void           variant_array_reserve(Variant& array, size_t size) noexcept;
+Variant&       variant_array_emplace_back(Variant& array) noexcept;
+const Variant& variant_array_element(const Variant& array, size_t i) noexcept;
 
 variant_type_name_t      variant_type_name(const Variant& value) noexcept;
 variant_dump_as_string_t variant_dump_as_string(const Variant& value) noexcept;

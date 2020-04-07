@@ -75,15 +75,16 @@ public:
 		RTTI_ASSERT(variant_holds_alternative<variant_array_t>(array), RTTI_DB_PRINT_FAILED_TO_SET_VALUE_FMT(
 			variant_type_name(array), "<builtin array>", variant_dump_as_string(array)));
 
-		RTTI_WARN_ASSERT(variant_array_size(array) == N, "Array variable [", N, "] and array value [",
-			variant_array_size(array), "] have different sizes: ", array);
+		size_t array_size = variant_array_size(array);
 
-		for (size_t i = 0; i < N; ++i) {
-			const Variant* value = variant_array_element(array, i);
-			if (value == nullptr)
-				return;
+		RTTI_WARN_ASSERT(array_size == N, "Array variable [", N, "] and array value [",
+			array_size, "] have different sizes: ", array);
 
-			object_set_value<T>(arr + i, *value);
+		size_t min_size = std::min(array_size, N);
+
+		for (size_t i = 0; i < min_size; ++i) {
+			const Variant& value = variant_array_element(array, i);
+			object_set_value<T>(arr + i, value);
 		}
 
 #else
@@ -97,11 +98,11 @@ public:
 	{
 #ifndef RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
 
-		variant_array_vector_t& array_vec = variant_make_array(array);
-		array_vec.reserve(N);
+		variant_make_array(array);
+		variant_array_reserve(array, N);
 
 		for (const T& value: arr)
-			array_vec.emplace_back(value);
+			variant_array_emplace_back(array) = value;
 
 #else
 		RTTI_UNUSED(arr);
@@ -117,25 +118,25 @@ public:
 		RTTI_ASSERT(variant_holds_alternative<variant_array_t>(array), RTTI_DB_PRINT_FAILED_TO_SET_VALUE_FMT(
 			variant_type_name(array), "std::vector", variant_dump_as_string(array)));
 
+		size_t array_size = variant_array_size(array);
+
 		vec->clear();
+		vec->reserve(array_size);
 
-		for (size_t i = 0; /* no condition */; ++i) {
-			const Variant* value = variant_array_element(array, i);
-			if (value == nullptr)
-				return;
-
-			object_set_value<T>(&vec->emplace_back(), *value);
+		for (size_t i = 0; i < array_size; ++i) {
+			const Variant& value = variant_array_element(array, i);
+			object_set_value<T>(&vec->emplace_back(), value);
 		}
 	}
 
 	template<typename T>
 	static void object_get_value(const std::vector<T>* vec, Variant& array) noexcept
 	{
-		variant_array_vector_t& array_vec = variant_make_array(array);
-		array_vec.reserve(vec->size());
+		variant_make_array(array);
+		variant_array_reserve(array, vec->size());
 
 		for (const T& value: *vec)
-			array_vec.emplace_back(value);
+			variant_array_emplace_back(array) = value;
 	}
 
 #endif // !RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE

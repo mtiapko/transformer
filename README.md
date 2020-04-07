@@ -47,7 +47,7 @@ private:
 }
 ```
 
-#### [example/simple/template.inja](example/simple/template.inja)
+#### [example/simple/template.jinja](example/simple/template.jinja)
 ```jinja
 We have in file {{ file_path }} {{ length(classes) }} classes:
 {% for c in classes %}
@@ -81,7 +81,7 @@ Enum {{ e.name }} has type {{ e.integer_type }}:
 {% endfor %}
 ```
 
-After execution of command `transformer example/simple/template.inja example/simple/source.hpp` the output will be:
+After execution of command `transformer example/simple/template.jinja example/simple/source.hpp` the output will be:
 ```text
 We have in file example/simple/source.hpp 3 classes:
 	Point2D does not have base classes :(

@@ -7,6 +7,8 @@
 
 	TODO(FiTH): enable/disable RTTI_LOG/RTTI_ASSERT printing file/func/line info
 
+	TODO(FiTH): allow external include in generated files
+
 	Used defines:
 		* RTTI_DISABLE_DEFAULT_CONFIG
 			Disable default config (default types).
@@ -26,6 +28,8 @@
 			Disable warning asserts.
 		* RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 			Disable 'DB::object_set_value_default' method.
+		* RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
+			Disable default setters/getters for builtin arrays (int [5], float [2], ...)
 		* RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 			Disable default setters/getters for builtin types (int, float, ...)
 		* RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
@@ -45,6 +49,7 @@
 // #define RTTI_DISABLE_ASSERT_PRINT
 // #define RTTI_DISABLE_WARN_ASSERT
 // #define RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+// #define RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
 // #define RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 // #define RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
@@ -90,16 +95,16 @@ using type_info_name_t      = std::string;
 using type_info_name_view_t = std::string;
 // TODO(FiTH): make it std::string_view when std::unordered_map will support '.find' by string_view
 
-/* ObjectFieldTypeInfo config */
-using object_field_type_info_field_name_t           = std::string;
-using object_field_type_info_get_addr_t             = void* (*)(void*) noexcept;
-using object_field_type_info_get_object_type_info_t = const struct ObjectTypeInfo* (*)() noexcept;
+/* ObjectFieldInfo config */
+using object_field_info_field_name_t           = std::string;
+using object_field_info_get_addr_t             = void* (*)(void*) noexcept;
+using object_field_info_get_object_type_info_t = const struct ObjectTypeInfo* (*)() noexcept;
 
 /* ObjectTypeInfo config */
-using object_type_info_fields_info_t     = std::vector<struct ObjectFieldTypeInfo>;
+using object_type_info_fields_info_t     = std::vector<struct ObjectFieldInfo>;
 using object_type_info_fields_info_map_t = std::unordered_map<
 	type_info_name_t,
-	const struct ObjectFieldTypeInfo*
+	const struct ObjectFieldInfo*
 >;
 
 }

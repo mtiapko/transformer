@@ -48,12 +48,29 @@ public:
 #endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
 	}
 
+	template<typename T>
+	static void object_get_value(const T* obj, Variant& value) noexcept
+	{
+#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+
+		const ObjectTypeInfo* info = DB::get_object_type_info<T>();
+
+		RTTI_ASSERT(info != nullptr, "Failed to get value from object with no RTTI");
+
+		DB::object_get_value_default(obj, value, info);
+
+#else
+		RTTI_UNUSED(obj);
+		RTTI_UNUSED(value);
+#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
+	}
+
 	// TODO(FiTH): add multidimensional array support
 	// TODO(FiTH): add char[] support?
 	template<typename T, size_t N>
 	static void object_set_value(T (&arr)[N], const Variant& array) noexcept
 	{
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#ifndef RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
 
 		RTTI_ASSERT(variant_holds_alternative<variant_array_t>(array), RTTI_DB_PRINT_FAILED_TO_SET_VALUE_FMT(
 			variant_type_name(array), "<builtin array>", variant_dump_as_string(array)));
@@ -72,7 +89,24 @@ public:
 #else
 		RTTI_UNUSED(arr);
 		RTTI_UNUSED(array);
-#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#endif // !RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
+	}
+
+	template<typename T, size_t N>
+	static void object_get_value(const T (&arr)[N], Variant& array) noexcept
+	{
+#ifndef RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
+
+		variant_array_vector_t& array_vec = variant_make_array(array);
+		array_vec.reserve(N);
+
+		for (const T& value: arr)
+			array_vec.emplace_back(value);
+
+#else
+		RTTI_UNUSED(arr);
+		RTTI_UNUSED(array);
+#endif // !RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
 	}
 
 #ifndef RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
@@ -106,39 +140,6 @@ public:
 
 #endif // !RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
 
-	template<typename T>
-	static void object_get_value(const T* obj, Variant& value) noexcept
-	{
-#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-
-		const ObjectTypeInfo* info = DB::get_object_type_info<T>();
-
-		RTTI_ASSERT(info != nullptr, "Failed to get value from object with no RTTI");
-
-		DB::object_get_value_default(obj, value, info);
-
-#else
-		RTTI_UNUSED(obj);
-		RTTI_UNUSED(value);
-#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-	}
-
-	template<typename T, size_t N>
-	static void object_get_value(const T (&arr)[N], Variant& array) noexcept
-	{
-#ifndef RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-
-		variant_array_vector_t& array_vec = variant_make_array(array);
-		array_vec.reserve(N);
-
-		for (const T& value: arr)
-			array_vec.emplace_back(value);
-
-#else
-		RTTI_UNUSED(arr);
-		RTTI_UNUSED(array);
-#endif // !RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-	}
 };
 
 }

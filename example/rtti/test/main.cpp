@@ -14,8 +14,8 @@ void set(rtti::Object* obj) noexcept
 {
 	auto info = obj->object_type_info();
 	for (const auto& f: info->fields_info) {
-		obj->object_field(f.field_name) = { { "x", 7 } };
-		obj->object_field(f.field_name) = "Hello!";
+		obj->object_field(f.name) = { { "x", 7 } };
+		obj->object_field(f.name) = "Hello!";
 	}
 }
 
@@ -32,7 +32,7 @@ int main() noexcept
 
 	std::clog << "info.name = " << info->name << '\n';
 	for (const auto& f: info->fields_info) {
-		std::clog << "\tinfo.field.name = " << f.field_name << '\n';
+		std::clog << "\tinfo.field.name = " << f.name << '\n';
 	}
 
 	Rect r {};

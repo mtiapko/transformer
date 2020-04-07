@@ -1,7 +1,7 @@
 #ifndef __RTTI_OBJECT_TYPE_INFO_H__
 #define __RTTI_OBJECT_TYPE_INFO_H__
 
-#include "rtti/ObjectFieldTypeInfo.h"
+#include "rtti/ObjectFieldInfo.h"
 
 namespace rtti
 {

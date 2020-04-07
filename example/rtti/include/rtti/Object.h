@@ -24,7 +24,7 @@ public:
 		return m_info;
 	}
 
-	const ObjectFieldTypeInfo* object_find_field_info(type_info_name_view_t name) const noexcept
+	const ObjectFieldInfo* object_find_field_info(type_info_name_view_t name) const noexcept
 	{
 		RTTI_ASSERT_RET(m_info != nullptr, nullptr,
 			"No RTTI for object. Failed to find field '", name, "' info");
@@ -40,7 +40,7 @@ public:
 
 	ObjectField object_field(type_info_name_view_t name) noexcept
 	{
-		const ObjectFieldTypeInfo* field_info = this->object_find_field_info(name);
+		const ObjectFieldInfo* field_info = this->object_find_field_info(name);
 
 		RTTI_WARN_ASSERT(field_info != nullptr, "Object of type '", (m_info != nullptr
 			? m_info->name : "<no RTTI>"), "' does not have field '", name, '\'');

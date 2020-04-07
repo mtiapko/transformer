@@ -34,6 +34,8 @@ template<>
 				"float", /* type: float */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = (Point2D*)inst;
 				if constexpr (std::is_floating_point_v<float>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -137,13 +139,28 @@ template<>
 
 					std::cerr << "Error! Unexpected type 'float' of 'Point2D::x'\n";
 				}
+#else
+
+// TODO: code duplication
+					DB::object_set_value /* <float> */ (&((Point2D*)inst)->x, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
-					value = ((Point2D*)obj)->x;
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const Point2D*)obj)->x;
+#else
+
+					DB::object_get_value(&((const Point2D*)obj)->x, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "x",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -157,6 +174,8 @@ template<>
 				"float", /* type: float */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = (Point2D*)inst;
 				if constexpr (std::is_floating_point_v<float>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -260,13 +279,28 @@ template<>
 
 					std::cerr << "Error! Unexpected type 'float' of 'Point2D::y'\n";
 				}
+#else
+
+// TODO: code duplication
+					DB::object_set_value /* <float> */ (&((Point2D*)inst)->y, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
-					value = ((Point2D*)obj)->y;
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const Point2D*)obj)->y;
+#else
+
+					DB::object_get_value(&((const Point2D*)obj)->y, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "y",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -328,6 +362,8 @@ template<>
 				"float", /* type: float */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = (Point3D*)inst;
 				if constexpr (std::is_floating_point_v<float>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -431,13 +467,28 @@ template<>
 
 					std::cerr << "Error! Unexpected type 'float' of 'Point2D::x'\n";
 				}
+#else
+
+// TODO: code duplication
+					DB::object_set_value /* <float> */ (&((Point3D*)inst)->x, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
-					value = ((Point3D*)obj)->x;
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const Point3D*)obj)->x;
+#else
+
+					DB::object_get_value(&((const Point3D*)obj)->x, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "x",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -451,6 +502,8 @@ template<>
 				"float", /* type: float */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = (Point3D*)inst;
 				if constexpr (std::is_floating_point_v<float>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -554,13 +607,28 @@ template<>
 
 					std::cerr << "Error! Unexpected type 'float' of 'Point2D::y'\n";
 				}
+#else
+
+// TODO: code duplication
+					DB::object_set_value /* <float> */ (&((Point3D*)inst)->y, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
-					value = ((Point3D*)obj)->y;
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const Point3D*)obj)->y;
+#else
+
+					DB::object_get_value(&((const Point3D*)obj)->y, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "y",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -574,6 +642,8 @@ template<>
 				"float", /* type: float */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = (Point3D*)inst;
 				if constexpr (std::is_floating_point_v<float>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -677,13 +747,28 @@ template<>
 
 					std::cerr << "Error! Unexpected type 'float' of 'Point3D::z'\n";
 				}
+#else
+
+// TODO: code duplication
+					DB::object_set_value /* <float> */ (&((Point3D*)inst)->z, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
-					value = ((Point3D*)obj)->z;
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const Point3D*)obj)->z;
+#else
+
+					DB::object_get_value(&((const Point3D*)obj)->z, value);
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "z",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -704,11 +789,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(&((Point3D*)obj)->point, value);
+					DB::object_get_value(&((const Point3D*)obj)->point, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "point",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -779,11 +864,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(&((Rect*)obj)->name, value);
+					DB::object_get_value(&((const Rect*)obj)->name, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "name",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -804,11 +889,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(&((Rect*)obj)->top_left, value);
+					DB::object_get_value(&((const Rect*)obj)->top_left, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "top_left",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -829,11 +914,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(&((Rect*)obj)->bot_right, value);
+					DB::object_get_value(&((const Rect*)obj)->bot_right, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "bot_right",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -854,11 +939,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(&((Rect*)obj)->arr, value);
+					DB::object_get_value(&((const Rect*)obj)->arr, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "arr",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -879,11 +964,11 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(((Rect*)obj)->arr2, value);
+					DB::object_get_value<float, 5>(((const Rect*)obj)->arr2, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "arr2",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
@@ -894,27 +979,27 @@ template<>
 		{
 			/* TypeInfo */
 			{
-				"char [32]", /* type: char [32] */
+				"char [16]", /* type: char [16] */
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
 
-					DB::object_set_value<char, 32>(((Rect*)inst)->str_arr, value);
+					DB::object_set_value<char, 16>(((Rect*)inst)->str_arr, value);
 
 				},
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 
-					DB::object_get_value(((Rect*)obj)->str_arr, value);
+					DB::object_get_value<char, 16>(((const Rect*)obj)->str_arr, value);
 
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "str_arr",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{
 				return &((Rect*)this_ptr)->str_arr;
 			},
-			&DB::get_object_type_info<char [32]>
+			&DB::get_object_type_info<char [16]>
 		},
 	},
 	{

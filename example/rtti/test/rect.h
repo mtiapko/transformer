@@ -28,7 +28,7 @@ private:
 
 	std::vector<float> arr;
 	float arr2[5];
-	char str_arr[32];
+	char str_arr[16];
 
 public:
 	void print() noexcept

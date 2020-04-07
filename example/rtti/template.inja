@@ -37,6 +37,8 @@ template<>
 				/* setter */ [](void* inst, const Variant& value) noexcept
 				{
 ## if f.is_builtin_type
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
 				auto this_ptr = ({{ c.full_name }}*)inst;
 				if constexpr (std::is_floating_point_v<{{ f.type }}>) {
 					if (value.type() == Variant::value_t::number_float) { // TODO: handle null
@@ -140,6 +142,17 @@ template<>
 
 					std::cerr << "Error! Unexpected type '{{ f.type }}' of '{{ f.full_name }}'\n";
 				}
+#else
+
+// TODO: code duplication
+## if f.is_array_type == false
+					DB::object_set_value /* <{{ f.type }}> */ (&(({{ c.full_name }}*)inst)->{{ f.name }}, value);
+## else
+					DB::object_set_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>((({{ c.full_name }}*)inst)->{{ f.name }}, value);
+## endif
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 ## else
 
 ## if f.is_array_type == false
@@ -153,19 +166,31 @@ template<>
 				/* getter */ [](const void* obj, Variant& value) noexcept
 				{
 ## if f.is_builtin_type
-					value = (({{ c.full_name }}*)obj)->{{ f.name }};
+
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+					value = ((const {{ c.full_name }}*)obj)->{{ f.name }};
+#else
+
+## if f.is_array_type == false
+					DB::object_get_value(&((const {{ c.full_name }}*)obj)->{{ f.name }}, value);
+## else
+					DB::object_get_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>(((const {{ c.full_name }}*)obj)->{{ f.name }}, value);
+## endif
+
+#endif // !RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+
 ## else
 
 ## if f.is_array_type == false
-					DB::object_get_value(&(({{ c.full_name }}*)obj)->{{ f.name }}, value);
+					DB::object_get_value(&((const {{ c.full_name }}*)obj)->{{ f.name }}, value);
 ## else
-					DB::object_get_value((({{ c.full_name }}*)obj)->{{ f.name }}, value);
+					DB::object_get_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>(((const {{ c.full_name }}*)obj)->{{ f.name }}, value);
 ## endif
 
 ## endif
 				},
 			},
-			/* ObjectFieldTypeInfo */
+			/* ObjectFieldInfo */
 			/* name */ "{{ f.name }}",
 			/* get addr */ [](void* this_ptr) noexcept -> void*
 			{

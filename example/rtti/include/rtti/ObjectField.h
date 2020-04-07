@@ -20,6 +20,8 @@ public:
 		, m_field_info(field_info)
 	{}
 
+	// TODO(FiTH): add array API
+
 	const ObjectFieldInfo* find_subfield_info(type_info_name_view_t name) const noexcept
 	{
 		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,

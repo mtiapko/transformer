@@ -1,0 +1,153 @@
+#include "rtti/Variant.h"
+#include "rtti/DB.h"
+
+## for c in classes
+template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_info<struct {{ c.full_name }}>() noexcept;
+## endfor
+
+#include "rect.h" // TODO: add file name var
+
+// TODO: add 'const' fields support (fail assert in setter)
+// TODO: add enum support
+// TODO: rewrite error msg with value dump
+// TODO: add bool
+#define RTTI_BUILTIN_TYPE_SET_VALUE(cond, type, name, variant_type_1, variant_type_2, variant_type_3) \
+	if constexpr (std::cond##_v<type>) { \
+		if (value.is_number_##variant_type_1()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_1##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_number_##variant_type_2()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_2##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_number_##variant_type_3()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_3##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_null()) { \
+			ref = {}; \
+		} else { \
+			RTTI_LOG_ERR("Failed to assign variable '" #name "' of type '" #type "' value of type '", \
+				variant_type_name(value), "': ", variant_dump_as_string(value)); \
+		} \
+	}
+
+namespace rtti
+{
+## for c in classes
+
+/* * * * * * * * * * * * * * * * * * * * * * *
+
+		{{ c.full_name }}
+
+* * * * * * * * * * * * * * * * * * * * * * * */
+template<>
+/* static */ ObjectTypeInfo DB::make_object_type_info<{{ c.full_name }}>() noexcept
+{
+## for f in c.fields
+	/* {{ f.name }} */
+	auto {{ f.name }}_setter = [](void* ptr, const Variant& value) noexcept
+	{
+## if f.is_builtin_type
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }};
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    {{ f.type }}, {{ f.full_name }}, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  {{ f.type }}, {{ f.full_name }}, unsigned, integer,  float   )
+#endif
+
+## endif
+## if f.is_builtin_type
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+## endif
+## if f.is_array_type == false
+		DB::object_set_value(&static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+## else
+		DB::object_set_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>
+			(static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+## endif
+## if f.is_builtin_type
+#endif
+## endif
+	};
+
+	auto {{ f.name }}_getter = [](const void* ptr, Variant& value) noexcept
+	{
+## if f.is_builtin_type
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }};
+#endif
+
+## endif
+## if f.is_builtin_type
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+## endif
+## if f.is_array_type == false
+		DB::object_get_value(&static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+## else
+		DB::object_get_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>
+			(static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+## endif
+## if f.is_builtin_type
+#endif
+## endif
+	};
+
+	auto {{ f.name }}_get_addr = [](void* parent_ptr) noexcept -> void*
+	{
+		return &(({{ c.full_name }}*)parent_ptr)->{{ f.name }};
+	};
+
+## endfor
+	ObjectTypeInfo info {
+		/* TypeInfo */
+		{
+			/* name   */ "{{ c.name }}",
+			// TODO: write own and disable by macro. remove from DB '_default'
+			/* setter */ (type_info_setter_t)(void (*)({{ c.full_name }}*, const Variant&) noexcept)
+				&DB::object_set_value,
+			/* getter */ (type_info_getter_t)(void (*)(const {{ c.full_name }}*, Variant&) noexcept)
+				&DB::object_get_value
+		},
+		/* ObjectTypeInfo */
+		/* fields_info */
+		{
+## for f in c.fields
+			{
+				/* type_info */
+				{
+					/* name   */ "{{ f.type }}",
+					/* setter */ {{ f.name }}_setter,
+					/* getter */ {{ f.name }}_getter
+				},
+				/* name                 */ "{{ f.name }}",
+				/* get_addr             */ {{ f.name }}_get_addr,
+				/* get_object_type_info */ &DB::get_object_type_info<{{ f.type }}>
+			},
+## endfor
+		},
+		/* fields_info_map */
+		{
+## for f in c.fields
+			{ "{{ f.name }}", &info.fields_info[{{ loop.index }}] },
+## endfor
+		}
+	};
+
+	return info;
+}
+
+namespace
+{
+
+static const ObjectTypeInfo info_{{ loop.index }} = DB::make_object_type_info<{{ c.full_name }}>();
+
+} /* namespace <anonymous> */
+
+template<>
+/* static */ const ObjectTypeInfo* DB::get_object_type_info<{{ c.full_name }}>() noexcept
+{
+	return &info_{{ loop.index }};
+}
+
+## endfor
+} /* namespace rtti */

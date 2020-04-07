@@ -7,6 +7,28 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 
 #include "rect.h" // TODO: add file name var
 
+// TODO: add 'const' fields support (fail assert in setter)
+// TODO: add enum support
+// TODO: add bool
+#define RTTI_BUILTIN_TYPE_SET_VALUE(cond, type, name, variant_type_1, variant_type_2, variant_type_3) \
+	if constexpr (std::cond##_v<type>) { \
+		if (value.is_number_##variant_type_1()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_1##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_number_##variant_type_2()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_2##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_number_##variant_type_3()) { \
+			auto value_data = value.get_ptr<const variant_##variant_type_3##_t*>(); \
+			ref = *value_data; \
+		} else if (value.is_null()) { \
+			ref = {}; \
+		} else { \
+			RTTI_LOG_ERR("Failed to assign variable '" #name "' of type '" #type "' value of type '", \
+				variant_type_name(value), "': ", variant_dump_as_string(value)); \
+		} \
+	}
+
 namespace rtti
 {
 
@@ -21,14 +43,28 @@ template<>
 	/* x */
 	auto x_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<Point2D*>(ptr)->x;
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    float, Point2D::x, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  float, Point2D::x, unsigned, integer,  float   )
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_set_value(&static_cast<Point2D*>(ptr)->x, value);
+#endif
 	};
 
 	auto x_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const Point2D*>(ptr)->x;
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_get_value(&static_cast<const Point2D*>(ptr)->x, value);
+#endif
 	};
 
 	auto x_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -39,14 +75,28 @@ template<>
 	/* y */
 	auto y_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<Point2D*>(ptr)->y;
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    float, Point2D::y, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  float, Point2D::y, unsigned, integer,  float   )
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_set_value(&static_cast<Point2D*>(ptr)->y, value);
+#endif
 	};
 
 	auto y_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const Point2D*>(ptr)->y;
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_get_value(&static_cast<const Point2D*>(ptr)->y, value);
+#endif
 	};
 
 	auto y_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -58,6 +108,7 @@ template<>
 		/* TypeInfo */
 		{
 			/* name   */ "Point2D",
+			// TODO: write own and disable by macro. remove from DB '_default'
 			/* setter */ (type_info_setter_t)(void (*)(Point2D*, const Variant&) noexcept)
 				&DB::object_set_value,
 			/* getter */ (type_info_getter_t)(void (*)(const Point2D*, Variant&) noexcept)
@@ -124,14 +175,28 @@ template<>
 	/* x */
 	auto x_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<Point3D*>(ptr)->x;
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    float, Point2D::x, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  float, Point2D::x, unsigned, integer,  float   )
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_set_value(&static_cast<Point3D*>(ptr)->x, value);
+#endif
 	};
 
 	auto x_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const Point3D*>(ptr)->x;
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_get_value(&static_cast<const Point3D*>(ptr)->x, value);
+#endif
 	};
 
 	auto x_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -142,14 +207,28 @@ template<>
 	/* y */
 	auto y_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<Point3D*>(ptr)->y;
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    float, Point2D::y, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  float, Point2D::y, unsigned, integer,  float   )
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_set_value(&static_cast<Point3D*>(ptr)->y, value);
+#endif
 	};
 
 	auto y_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const Point3D*>(ptr)->y;
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_get_value(&static_cast<const Point3D*>(ptr)->y, value);
+#endif
 	};
 
 	auto y_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -160,14 +239,28 @@ template<>
 	/* z */
 	auto z_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		auto& ref = static_cast<Point3D*>(ptr)->z;
+
+		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point3D::z, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    float, Point3D::z, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  float, Point3D::z, unsigned, integer,  float   )
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_set_value(&static_cast<Point3D*>(ptr)->z, value);
+#endif
 	};
 
 	auto z_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		value = static_cast<const Point3D*>(ptr)->z;
+#endif
+
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		DB::object_get_value(&static_cast<const Point3D*>(ptr)->z, value);
+#endif
 	};
 
 	auto z_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -178,14 +271,12 @@ template<>
 	/* point */
 	auto point_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value(&static_cast<Point3D*>(ptr)->point, value);
 	};
 
 	auto point_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value(&static_cast<const Point3D*>(ptr)->point, value);
 	};
 
 	auto point_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -197,6 +288,7 @@ template<>
 		/* TypeInfo */
 		{
 			/* name   */ "Point3D",
+			// TODO: write own and disable by macro. remove from DB '_default'
 			/* setter */ (type_info_setter_t)(void (*)(Point3D*, const Variant&) noexcept)
 				&DB::object_set_value,
 			/* getter */ (type_info_getter_t)(void (*)(const Point3D*, Variant&) noexcept)
@@ -287,14 +379,12 @@ template<>
 	/* name */
 	auto name_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value(&static_cast<Rect*>(ptr)->name, value);
 	};
 
 	auto name_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value(&static_cast<const Rect*>(ptr)->name, value);
 	};
 
 	auto name_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -305,14 +395,12 @@ template<>
 	/* top_left */
 	auto top_left_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value(&static_cast<Rect*>(ptr)->top_left, value);
 	};
 
 	auto top_left_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value(&static_cast<const Rect*>(ptr)->top_left, value);
 	};
 
 	auto top_left_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -323,14 +411,12 @@ template<>
 	/* bot_right */
 	auto bot_right_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value(&static_cast<Rect*>(ptr)->bot_right, value);
 	};
 
 	auto bot_right_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value(&static_cast<const Rect*>(ptr)->bot_right, value);
 	};
 
 	auto bot_right_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -341,14 +427,12 @@ template<>
 	/* arr */
 	auto arr_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value(&static_cast<Rect*>(ptr)->arr, value);
 	};
 
 	auto arr_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value(&static_cast<const Rect*>(ptr)->arr, value);
 	};
 
 	auto arr_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -359,14 +443,14 @@ template<>
 	/* arr2 */
 	auto arr2_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value<float, 5>
+			(static_cast<Rect*>(ptr)->arr2, value);
 	};
 
 	auto arr2_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value<float, 5>
+			(static_cast<const Rect*>(ptr)->arr2, value);
 	};
 
 	auto arr2_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -377,14 +461,14 @@ template<>
 	/* str_arr */
 	auto str_arr_setter = [](void* ptr, const Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_set_value<char, 16>
+			(static_cast<Rect*>(ptr)->str_arr, value);
 	};
 
 	auto str_arr_getter = [](const void* ptr, Variant& value) noexcept
 	{
-		RTTI_UNUSED(ptr);
-		RTTI_UNUSED(value);
+		DB::object_get_value<char, 16>
+			(static_cast<const Rect*>(ptr)->str_arr, value);
 	};
 
 	auto str_arr_get_addr = [](void* parent_ptr) noexcept -> void*
@@ -396,6 +480,7 @@ template<>
 		/* TypeInfo */
 		{
 			/* name   */ "Rect",
+			// TODO: write own and disable by macro. remove from DB '_default'
 			/* setter */ (type_info_setter_t)(void (*)(Rect*, const Variant&) noexcept)
 				&DB::object_set_value,
 			/* getter */ (type_info_getter_t)(void (*)(const Rect*, Variant&) noexcept)

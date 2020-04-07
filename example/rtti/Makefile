@@ -21,8 +21,8 @@ OUT := $(addprefix $(OUT_DIR), $(OUT_NAME))
 all: gen
 	@$(MAKE) --no-print-directory --jobs 8 $(OUT)
 
-test/gen.cpp: template.inja test/rect.h
-	@ ../../bin/transformer ./template.inja ./test/rect.h -o test/gen.cpp --compiler-args \
+test/gen.cpp: template.jinja test/rect.h
+	@ ../../bin/transformer ./template.jinja ./test/rect.h -o test/gen.cpp --compiler-args \
 		-cxx-isystem /usr/lib/clang/9.0.1/include -std=c++2a -x c++ \
 		-I../../libs/json/include \
 		-I./include

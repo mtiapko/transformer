@@ -84,6 +84,8 @@ int main() noexcept
 
 	r.print();
 
+	r.object_field("top_left").subfield("x") = "test";
+
 	std::clog << r.object_get_value().dump(4, ' ') << '\n';
 
 	return EXIT_SUCCESS;

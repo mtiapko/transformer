@@ -25,6 +25,7 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 		} else if (value.is_null()) { \
 			ref = {}; \
 		} else { \
+			/* TODO: RTTI_ASSERT(false, ...) */ \
 			RTTI_LOG_ERR("Failed to assign variable '" #name "' of type '" #type "' value of type '", \
 				variant_type_name(value), "': ", variant_dump_as_string(value)); \
 		} \
@@ -42,12 +43,25 @@ namespace rtti
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<{{ c.full_name }}>() noexcept
 {
+	auto {{ c.name }}_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		((type_info_setter_t)(void (*)({{ c.full_name }}*, const Variant&) noexcept)
+				&DB::object_set_value)(ptr, value);
+	};
+
+	auto {{ c.name }}_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		((type_info_getter_t)(void (*)(const {{ c.full_name }}*, Variant&) noexcept)
+				&DB::object_get_value)(ptr, value);
+	};
+
 ## for f in c.fields
 	/* {{ f.name }} */
 	auto {{ f.name }}_setter = [](void* ptr, const Variant& value) noexcept
 	{
 ## if f.is_builtin_type
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }};
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)
@@ -103,10 +117,8 @@ template<>
 		{
 			/* name   */ "{{ c.name }}",
 			// TODO: write own and disable by macro. remove from DB '_default'
-			/* setter */ (type_info_setter_t)(void (*)({{ c.full_name }}*, const Variant&) noexcept)
-				&DB::object_set_value,
-			/* getter */ (type_info_getter_t)(void (*)(const {{ c.full_name }}*, Variant&) noexcept)
-				&DB::object_get_value
+			/* setter */ {{ c.name }}_setter,
+			/* getter */ {{ c.name }}_getter
 		},
 		/* ObjectTypeInfo */
 		/* fields_info */

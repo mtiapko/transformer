@@ -34,15 +34,17 @@
 #	define RTTI_ASSERT_PRINT(...) /* empty */
 #endif // !RTTI_DISABLE_ASSERT_PRINT
 
-#define RTTI_ASSERT_RET(x, ret, ...) \
+#define RTTI_ASSERT_IMPL(x, action, ...) \
 	if (!(x)) { \
 		RTTI_ASSERT_PRINT(#x, __VA_ARGS__); \
 		RTTI_ASSERT_FAIL_ACTION; \
 		\
-		return ret; \
+		action; \
 	}
 
-#define RTTI_ASSERT(x, ...) RTTI_ASSERT_RET(x, /* no ret */, __VA_ARGS__)
+#define RTTI_ASSERT_CONTINUE(x, ...) RTTI_ASSERT_IMPL(x, continue, __VA_ARGS__)
+#define RTTI_ASSERT_RET(x, ret, ...) RTTI_ASSERT_IMPL(x, return ret, __VA_ARGS__)
+#define RTTI_ASSERT(x, ...)          RTTI_ASSERT_RET(x, /* no ret */, __VA_ARGS__)
 
 #else
 #	define RTTI_ASSERT_RET(...) /* empty */

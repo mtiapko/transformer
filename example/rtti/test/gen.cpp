@@ -9,6 +9,7 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 
 // TODO: add 'const' fields support (fail assert in setter)
 // TODO: add enum support
+// TODO: rewrite error msg with value dump
 // TODO: add bool
 #define RTTI_BUILTIN_TYPE_SET_VALUE(cond, type, name, variant_type_1, variant_type_2, variant_type_3) \
 	if constexpr (std::cond##_v<type>) { \
@@ -24,6 +25,7 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 		} else if (value.is_null()) { \
 			ref = {}; \
 		} else { \
+			/* TODO: RTTI_ASSERT(false, ...) */ \
 			RTTI_LOG_ERR("Failed to assign variable '" #name "' of type '" #type "' value of type '", \
 				variant_type_name(value), "': ", variant_dump_as_string(value)); \
 		} \
@@ -40,10 +42,23 @@ namespace rtti
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Point2D>() noexcept
 {
+	auto Point2D_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		((type_info_setter_t)(void (*)(Point2D*, const Variant&) noexcept)
+				&DB::object_set_value)(ptr, value);
+	};
+
+	auto Point2D_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		((type_info_getter_t)(void (*)(const Point2D*, Variant&) noexcept)
+				&DB::object_get_value)(ptr, value);
+	};
+
 	/* x */
 	auto x_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<Point2D*>(ptr)->x;
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
@@ -76,6 +91,7 @@ template<>
 	auto y_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<Point2D*>(ptr)->y;
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
@@ -109,10 +125,8 @@ template<>
 		{
 			/* name   */ "Point2D",
 			// TODO: write own and disable by macro. remove from DB '_default'
-			/* setter */ (type_info_setter_t)(void (*)(Point2D*, const Variant&) noexcept)
-				&DB::object_set_value,
-			/* getter */ (type_info_getter_t)(void (*)(const Point2D*, Variant&) noexcept)
-				&DB::object_get_value
+			/* setter */ Point2D_setter,
+			/* getter */ Point2D_getter
 		},
 		/* ObjectTypeInfo */
 		/* fields_info */
@@ -172,10 +186,23 @@ template<>
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Point3D>() noexcept
 {
+	auto Point3D_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		((type_info_setter_t)(void (*)(Point3D*, const Variant&) noexcept)
+				&DB::object_set_value)(ptr, value);
+	};
+
+	auto Point3D_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		((type_info_getter_t)(void (*)(const Point3D*, Variant&) noexcept)
+				&DB::object_get_value)(ptr, value);
+	};
+
 	/* x */
 	auto x_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<Point3D*>(ptr)->x;
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
@@ -208,6 +235,7 @@ template<>
 	auto y_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<Point3D*>(ptr)->y;
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
@@ -240,6 +268,7 @@ template<>
 	auto z_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<Point3D*>(ptr)->z;
 
 		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, float, Point3D::z, float,    integer,  unsigned)
@@ -289,10 +318,8 @@ template<>
 		{
 			/* name   */ "Point3D",
 			// TODO: write own and disable by macro. remove from DB '_default'
-			/* setter */ (type_info_setter_t)(void (*)(Point3D*, const Variant&) noexcept)
-				&DB::object_set_value,
-			/* getter */ (type_info_getter_t)(void (*)(const Point3D*, Variant&) noexcept)
-				&DB::object_get_value
+			/* setter */ Point3D_setter,
+			/* getter */ Point3D_getter
 		},
 		/* ObjectTypeInfo */
 		/* fields_info */
@@ -376,6 +403,18 @@ template<>
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<Rect>() noexcept
 {
+	auto Rect_setter = [](void* ptr, const Variant& value) noexcept
+	{
+		((type_info_setter_t)(void (*)(Rect*, const Variant&) noexcept)
+				&DB::object_set_value)(ptr, value);
+	};
+
+	auto Rect_getter = [](const void* ptr, Variant& value) noexcept
+	{
+		((type_info_getter_t)(void (*)(const Rect*, Variant&) noexcept)
+				&DB::object_get_value)(ptr, value);
+	};
+
 	/* name */
 	auto name_setter = [](void* ptr, const Variant& value) noexcept
 	{
@@ -481,10 +520,8 @@ template<>
 		{
 			/* name   */ "Rect",
 			// TODO: write own and disable by macro. remove from DB '_default'
-			/* setter */ (type_info_setter_t)(void (*)(Rect*, const Variant&) noexcept)
-				&DB::object_set_value,
-			/* getter */ (type_info_getter_t)(void (*)(const Rect*, Variant&) noexcept)
-				&DB::object_get_value
+			/* setter */ Rect_setter,
+			/* getter */ Rect_getter
 		},
 		/* ObjectTypeInfo */
 		/* fields_info */

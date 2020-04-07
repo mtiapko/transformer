@@ -16,7 +16,7 @@ namespace rtti
 	const Variant::object_t* map = object.get_ptr<const Variant::object_t*>();
 	for (const auto& [key, value]: *map) {
 		auto field_iter = info->fields_info_map.find(key);
-		RTTI_ASSERT(field_iter != info->fields_info_map.cend(), "Type '", info->name,
+		RTTI_ASSERT_CONTINUE(field_iter != info->fields_info_map.cend(), "Type '", info->name,
 			"' does not have any field named '", key, '\'');
 
 		field_iter->second->type_info.setter(obj, value);

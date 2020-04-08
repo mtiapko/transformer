@@ -7,7 +7,8 @@
 
 	TODO(FiTH): enable/disable RTTI_LOG/RTTI_ASSERT printing file/func/line info
 
-	TODO(FiTH): allow external include in generated files
+	TODO(FiTH): allow external include in generated files. Already added RTTI_..._SETTER/GETTER_IMPL.
+		Useless todo?
 
 	Used defines:
 		* RTTI_DISABLE_DEFAULT_CONFIG
@@ -26,19 +27,19 @@
 			Disable printing 'assert' information.
 		* RTTI_DISABLE_WARN_ASSERT
 			Disable warning asserts.
-		* RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-			Disable 'DB::object_set_value_default' method.
-		* RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
-			Disable default setters/getters for builtin arrays (int [5], float [2], ...)
-		* RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+		* RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 			Disable default setters/getters for builtin types (int, float, ...)
-		* RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
+		* RTTI_DISABLE_BUILTIN_ARRAY_TYPES_DEFAULT_SETTER_GETTER
+			Disable default setters/getters for builtin array types (int [5], float [2], ...). User must provide own
+		* RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
+			Disable default setters/getters for objects (struct, class, ...)
+		* RTTI_DISABLE_STL_TYPES_DEFAULT_SETTER_GETTER
 			Disable default setters/getters for common STL types (string, vector, ...).
 
 */
 
 // TODO(FiTH): remove after debug
-
+/* ------------------------------------------------ */
 // #define RTTI_DISABLE_DEFAULT_CONFIG
 // #define RTTI_DISABLE_DEFAULT_VARIANT
 // #define RTTI_DISABLE_DEFAULT_VARIANT_HELPERS
@@ -48,10 +49,34 @@
 #define RTTI_DISABLE_ASSERT_EXIT_ON_FAIL
 // #define RTTI_DISABLE_ASSERT_PRINT
 // #define RTTI_DISABLE_WARN_ASSERT
-// #define RTTI_DISABLE_OBJECT_TYPE_SET_AND_GET_VALUE_DEFAULT
-// #define RTTI_DISABLE_BUILTIN_ARRAYS_SET_AND_GET_VALUE
-// #define RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
-// #define RTTI_DISABLE_STL_TYPES_SET_AND_GET_VALUE
+// #define RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
+// #define RTTI_DISABLE_BUILTIN_ARRAY_TYPES_DEFAULT_SETTER_GETTER
+// #define RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
+// #define RTTI_DISABLE_STL_TYPES_DEFAULT_SETTER_GETTER
+/* ------------------------------------------------ */
+
+// TODO(FiTH): add more params with info (type, name, parent, ...)
+
+/* Setters/getters for types with disabled default implementation. Can be overridden by external config */
+#define RTTI_BUILTIN_TYPE_SETTER_IMPL(ptr, value) \
+		DB::variable_set_value(ptr, value)
+
+#define RTTI_BUILTIN_TYPE_GETTER_IMPL(ptr, value) \
+		DB::variable_get_value(ptr, value)
+
+#define RTTI_BUILTIN_ARRAY_TYPE_SETTER_IMPL(elem_type, elem_count, ptr, value) \
+		DB::variable_set_value<elem_type, elem_count>(ptr, value)
+
+#define RTTI_BUILTIN_ARRAY_TYPE_GETTER_IMPL(elem_type, elem_count, ptr, value) \
+		DB::variable_get_value<elem_type, elem_count>(ptr, value)
+
+#define RTTI_OBJECT_SETTER_IMPL(obj, object_value) \
+	RTTI_UNUSED(obj); \
+	RTTI_UNUSED(object_value)
+
+#define RTTI_OBJECT_GETTER_IMPL(obj, object_value) \
+	RTTI_UNUSED(obj); \
+	RTTI_UNUSED(object_value)
 
 /* External config that can override or extend default config */
 #ifdef RTTI_EXTERNAL_CONFIG_PATH
@@ -85,10 +110,6 @@ using variant_bool_t     = bool;
 using variant_integer_t  = int64_t;
 using variant_unsigned_t = uint64_t;
 using variant_float_t    = double;
-
-/* Variant helpers config */
-using variant_type_name_t      = std::string_view;
-using variant_dump_as_string_t = std::string;
 
 /* TypeInfo config */
 using type_info_name_t      = std::string;

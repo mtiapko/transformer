@@ -1,17 +1,29 @@
+#include "rtti/DB/Log.h"
 #include "rtti/Variant.h"
 #include "rtti/DB.h"
 
+#ifndef RTTI_DISABLE_BUILTIN_ARRAY_TYPES_DEFAULT_SETTER_GETTER
+#	include "rtti/DB/ArrayTypesDefaultSetterGetter.h"
+#endif
+
+#ifndef RTTI_DISABLE_STL_TYPES_DEFAULT_SETTER_GETTER
+#	include "rtti/DB/STLTypesDefaultSetterGetter.h"
+#endif
+
+/* Forward declaration of explicit specialization for template functions */
 ## for c in classes
-template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_info<struct {{ c.full_name }}>() noexcept;
+
+/* Forward declaration of type */ struct {{ c.full_name }}; // TODO(FiTH): forward declare with struct/class
+template<> /* static */ rtti::ObjectTypeInfo        rtti::DB::make_object_type_info<{{ c.full_name }}>() noexcept;
+template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_info<{{ c.full_name }}>() noexcept;
 ## endfor
 
 #include "rect.h" // TODO: add file name var
 
 // TODO: add 'const' fields support (fail assert in setter)
 // TODO: add enum support
-// TODO: rewrite error msg with value dump
 // TODO: add bool
-#define RTTI_BUILTIN_TYPE_SET_VALUE(cond, type, name, variant_type_1, variant_type_2, variant_type_3) \
+#define RTTI_BUILTIN_TYPE_SETTER(cond, type, name, variant_type_1, variant_type_2, variant_type_3) \
 	if constexpr (std::cond##_v<type>) { \
 		if (value.is_number_##variant_type_1()) { \
 			auto value_data = value.get_ptr<const variant_##variant_type_1##_t*>(); \
@@ -25,9 +37,8 @@ template<> /* static */ const rtti::ObjectTypeInfo* rtti::DB::get_object_type_in
 		} else if (value.is_null()) { \
 			ref = {}; \
 		} else { \
-			/* TODO: RTTI_ASSERT(false, ...) */ \
-			RTTI_LOG_ERR("Failed to assign variable '" #name "' of type '" #type "' value of type '", \
-				variant_type_name(value), "': ", variant_dump_as_string(value)); \
+			RTTI_ASSERT(false, "Failed to assign variable '" #name "' of type '" #type "' value of type '", \
+				value.type_name(), "': ", value); \
 		} \
 	}
 
@@ -40,66 +51,109 @@ namespace rtti
 		{{ c.full_name }}
 
 * * * * * * * * * * * * * * * * * * * * * * * */
+
+namespace
+{
+
+static const ObjectTypeInfo info_{{ loop.index }} = DB::make_object_type_info<{{ c.full_name }}>();
+
+} /* namespace <anonymous> */
+
 template<>
 /* static */ ObjectTypeInfo DB::make_object_type_info<{{ c.full_name }}>() noexcept
 {
-	auto {{ c.name }}_setter = [](void* ptr, const Variant& value) noexcept
+	const type_info_setter_t {{ c.name }}_setter = [](void* obj, const Variant& object_value) noexcept
 	{
-		((type_info_setter_t)(void (*)({{ c.full_name }}*, const Variant&) noexcept)
-				&DB::object_set_value)(ptr, value);
+#ifndef RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
+
+		const Variant::object_t* object_value_ptr = object_value.get_ptr<const Variant::object_t*>();
+		RTTI_ASSERT(object_value_ptr != nullptr, RTTI_DB_LOG_FAILED_TO_SET_VALUE_FMT(
+			"{{ c.full_name }}", object_value));
+
+		for (const auto& [key, val]: *object_value_ptr) {
+			auto field_info_iter = info_{{ loop.index }}.fields_info_map.find(key);
+			RTTI_ASSERT_CONTINUE(field_info_iter != info_{{ loop.index }}.fields_info_map.cend(),
+				"Object of type '{{ c.full_name }}' does not have field with name '", key, "'. "
+				"Failed to set value of type '", val.type_name(), "': ", val);
+
+			field_info_iter->second->type_info.setter(obj, val);
+		}
+
+#else
+		RTTI_OBJECT_SETTER_IMPL(obj, object_value);
+#endif // !RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
 	};
 
-	auto {{ c.name }}_getter = [](const void* ptr, Variant& value) noexcept
+	const type_info_getter_t {{ c.name }}_getter = [](const void* obj, Variant& object_value) noexcept
 	{
-		((type_info_getter_t)(void (*)(const {{ c.full_name }}*, Variant&) noexcept)
-				&DB::object_get_value)(ptr, value);
+#ifndef RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
+
+		if (!object_value.is_object()) {
+			object_value = Variant::object_t {};
+		} else {
+			object_value.clear();
+		}
+
+		Variant::object_t* object_value_ptr = object_value.get_ptr<Variant::object_t*>();
+
+		for (const ObjectFieldInfo& field_info: info_{{ loop.index }}.fields_info) {
+			Variant field_value;
+			field_info.type_info.getter(obj, field_value);
+
+			if (!field_value.is_null())
+				object_value_ptr->emplace(field_info.name, std::move(field_value));
+		}
+
+#else
+		RTTI_OBJECT_GETTER_IMPL(obj, object_value);
+#endif // !RTTI_DISABLE_OBJECT_DEFAULT_SETTER_GETTER
 	};
 
 ## for f in c.fields
 	/* {{ f.name }} */
-	auto {{ f.name }}_setter = [](void* ptr, const Variant& value) noexcept
+	const type_info_setter_t {{ f.name }}_setter = [](void* ptr, const Variant& value) noexcept
 	{
 ## if f.is_builtin_type
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 		// TODO: rewrite. ptr already must points to field
 		auto& ref = static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }};
 
-		RTTI_BUILTIN_TYPE_SET_VALUE(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)
-		else RTTI_BUILTIN_TYPE_SET_VALUE(is_signed,    {{ f.type }}, {{ f.full_name }}, integer,  unsigned, float   )
-		else RTTI_BUILTIN_TYPE_SET_VALUE(is_unsigned,  {{ f.type }}, {{ f.full_name }}, unsigned, integer,  float   )
+		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)
+		else RTTI_BUILTIN_TYPE_SETTER(is_signed,    {{ f.type }}, {{ f.full_name }}, integer,  unsigned, float   )
+		else RTTI_BUILTIN_TYPE_SETTER(is_unsigned,  {{ f.type }}, {{ f.full_name }}, unsigned, integer,  float   )
 #endif
 
 ## endif
 ## if f.is_builtin_type
-#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 ## endif
 ## if f.is_array_type == false
-		DB::object_set_value(&static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_TYPE_SETTER_IMPL(&static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
 ## else
-		DB::object_set_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>
-			(static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_ARRAY_TYPE_SETTER_IMPL({{ f.array_element_type }}, {{ f.array_elements_count }},
+			static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
 ## endif
 ## if f.is_builtin_type
 #endif
 ## endif
 	};
 
-	auto {{ f.name }}_getter = [](const void* ptr, Variant& value) noexcept
+	const type_info_getter_t {{ f.name }}_getter = [](const void* ptr, Variant& value) noexcept
 	{
 ## if f.is_builtin_type
-#ifndef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 		value = static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }};
 #endif
 
 ## endif
 ## if f.is_builtin_type
-#ifdef RTTI_DISABLE_BUILTIN_TYPES_SET_AND_GET_VALUE
+#ifdef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 ## endif
 ## if f.is_array_type == false
-		DB::object_get_value(&static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_TYPE_GETTER_IMPL(&static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
 ## else
-		DB::object_get_value<{{ f.array_element_type }}, {{ f.array_elements_count }}>
-			(static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_ARRAY_TYPE_GETTER_IMPL({{ f.array_element_type }}, {{ f.array_elements_count }},
+			static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
 ## endif
 ## if f.is_builtin_type
 #endif
@@ -116,7 +170,6 @@ template<>
 		/* TypeInfo */
 		{
 			/* name   */ "{{ c.name }}",
-			// TODO: write own and disable by macro. remove from DB '_default'
 			/* setter */ {{ c.name }}_setter,
 			/* getter */ {{ c.name }}_getter
 		},
@@ -139,6 +192,10 @@ template<>
 		},
 		/* fields_info_map */
 		{
+			/*
+				NOTE(FiTH): Since we are using addresses of elements from std::vector created inside local variable,
+					compiler must support NRVO or move constructor for std::vector or program will crash.
+			*/
 ## for f in c.fields
 			{ "{{ f.name }}", &info.fields_info[{{ loop.index }}] },
 ## endfor
@@ -147,13 +204,6 @@ template<>
 
 	return info;
 }
-
-namespace
-{
-
-static const ObjectTypeInfo info_{{ loop.index }} = DB::make_object_type_info<{{ c.full_name }}>();
-
-} /* namespace <anonymous> */
 
 template<>
 /* static */ const ObjectTypeInfo* DB::get_object_type_info<{{ c.full_name }}>() noexcept

@@ -51,6 +51,7 @@ public:
 			? m_field_info->name : "<no RTTI>"), "' of type '",
 			m_field_info->type_info.name, "' does not have subfield '", name, '\'');
 
+		// TODO(FiTH): remove. m_parent_ptr must be m_ptr
 		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
 		return { this_ptr, subfield_info };
 	}
@@ -58,7 +59,7 @@ public:
 	void set_value(const Variant& value) noexcept
 	{
 		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. "
-			"Failed to set value '", variant_dump_as_string(value), '\'');
+			"Failed to set value '", value, '\'');
 
 		m_field_info->type_info.setter(m_parent_ptr, value);
 	}

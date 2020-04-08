@@ -1,11 +1,14 @@
 #ifndef __RTTI_LOG_H__
 #define __RTTI_LOG_H__
 
-#include "rtti/Config.h"
+#include "rtti/VariantFwd.h"
 
 #ifndef RTTI_DISABLE_LOG
 
 #include <iostream>
+
+/* Helper */
+#define RTTI_PRINT_TUPLE(...) __VA_ARGS__
 
 #define RTTI_PRINT_IMPL(out, ...)  rtti::Log::print(std::c##out, ##__VA_ARGS__, '\n');
 
@@ -14,14 +17,20 @@
 
 #define RTTI_LOG_FMT __FILE__ "::", __func__, " (", __LINE__, ") - "
 
-#define RTTI_LOG_IMPL(...)       RTTI_PRINT("[  MSG  ] ", ##__VA_ARGS__)
-#define RTTI_LOG(...)            RTTI_LOG_IMPL(RTTI_LOG_FMT, ##__VA_ARGS__)
+#define RTTI_LOG_IMPL(...) RTTI_PRINT("[  MSG  ] ", ##__VA_ARGS__)
+#define RTTI_LOG(...)      RTTI_LOG_IMPL(RTTI_LOG_FMT, ##__VA_ARGS__)
 
-#define RTTI_LOG_WARN_IMPL(...)  RTTI_PRINT_ERR("[WARNING] ", ##__VA_ARGS__)
-#define RTTI_LOG_WARN(...)       RTTI_LOG_WARN_IMPL(RTTI_LOG_FMT, ##__VA_ARGS__)
+#define RTTI_LOG_WARN_IMPL(...) RTTI_PRINT_ERR("[WARNING] ", ##__VA_ARGS__)
+#define RTTI_LOG_WARN(...)      RTTI_LOG_WARN_IMPL(RTTI_LOG_FMT, ##__VA_ARGS__)
 
 #define RTTI_LOG_ERR_IMPL(...) RTTI_PRINT_ERR("[ ERROR ] ", ##__VA_ARGS__)
 #define RTTI_LOG_ERR(...)      RTTI_LOG_ERR_IMPL(RTTI_LOG_FMT, ##__VA_ARGS__)
+
+/* Forward declaration */
+namespace nlohmann
+{
+	std::ostream& operator<<(std::ostream&, const rtti::Variant&);
+}
 
 namespace rtti
 {

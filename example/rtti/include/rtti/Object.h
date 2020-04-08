@@ -51,7 +51,7 @@ public:
 	void object_set_value(const Variant& value) noexcept
 	{
 		RTTI_ASSERT(m_info != nullptr, "No RTTI for object. "
-			"Failed to set value '", variant_dump_as_string(value), '\'');
+			"Failed to set value '", value, '\'');
 
 		m_info->setter(this, value);
 	}

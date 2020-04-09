@@ -22,44 +22,30 @@ public:
 
 	// TODO(FiTH): add array API
 
-	const ObjectFieldInfo* find_subfield_info(type_info_name_view_t name) const noexcept
-	{
-		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
-			"Object field not exists. Failed to find subfield '", name, "' info");
-
-		const ObjectTypeInfo* object_type_info = m_field_info->get_object_type_info();
-		RTTI_ASSERT_RET(object_type_info != nullptr, nullptr, "No RTTI for object field '",
-			m_field_info->name, "' of type '", m_field_info->type_info.name, '\'');
-
-		const object_type_info_fields_info_map_t::const_iterator field_iter
-			= object_type_info->fields_info_map.find(name);
-
-		if (field_iter == object_type_info->fields_info_map.cend())
-			return nullptr;
-
-		return field_iter->second;
-	}
-
 	ObjectField subfield(type_info_name_view_t name) noexcept
 	{
 		RTTI_ASSERT_RET(m_field_info != nullptr, nullptr,
 			"Object field not exists. Failed to get subfield '", name, '\'');
 
-		const ObjectFieldInfo* subfield_info = this->find_subfield_info(name);
+		const ObjectTypeInfo* object_type_info = m_field_info->get_object_type_info();
+		RTTI_ASSERT_RET(object_type_info != nullptr, nullptr, "No RTTI for object field '",
+			m_field_info->name, "' of type '", m_field_info->type_info.name,
+			"'. Failed to get subfield: ", name);
 
-		RTTI_WARN_ASSERT(subfield_info != nullptr, "Object field '", (m_field_info != nullptr
-			? m_field_info->name : "<no RTTI>"), "' of type '",
-			m_field_info->type_info.name, "' does not have subfield '", name, '\'');
+		const object_type_info_fields_info_map_t::const_iterator subfield_iter
+			= object_type_info->fields_info_map.find(name);
 
-		// TODO(FiTH): remove. m_parent_ptr must be m_ptr
-		void* this_ptr = m_field_info->get_addr(m_parent_ptr);
-		return { this_ptr, subfield_info };
+		if (subfield_iter == object_type_info->fields_info_map.cend())
+			return nullptr;
+
+		void* field_ptr = m_field_info->get_addr(m_parent_ptr);
+		return { field_ptr, subfield_iter->second };
 	}
 
 	void set_value(const Variant& value) noexcept
 	{
 		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. "
-			"Failed to set value '", value, '\'');
+			"Failed to set value: ", value);
 
 		m_field_info->type_info.setter(m_parent_ptr, value);
 	}

@@ -76,7 +76,10 @@ template<>
 				"Object of type '{{ c.full_name }}' does not have field with name '", key, "'. "
 				"Failed to set value of type '", val.type_name(), "': ", val);
 
-			field_info_iter->second->type_info.setter(obj, val);
+			const ObjectFieldInfo* field_info = field_info_iter->second;
+			void* field_ptr = field_info->get_addr(obj);
+
+			field_info->type_info.setter(field_ptr, val);
 		}
 
 #else
@@ -98,7 +101,8 @@ template<>
 
 		for (const ObjectFieldInfo& field_info: info_{{ loop.index }}.fields_info) {
 			Variant field_value;
-			field_info.type_info.getter(obj, field_value);
+			const void* field_ptr = field_info.get_const_addr(obj);
+			field_info.type_info.getter(field_ptr, field_value);
 
 			if (!field_value.is_null())
 				object_value_ptr->emplace(field_info.name, std::move(field_value));
@@ -116,7 +120,7 @@ template<>
 ## if f.is_builtin_type
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 		// TODO: rewrite. ptr already must points to field
-		auto& ref = static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }};
+		auto& ref = *static_cast<{{ f.type }}*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)
 		else RTTI_BUILTIN_TYPE_SETTER(is_signed,    {{ f.type }}, {{ f.full_name }}, integer,  unsigned, float   )
@@ -128,10 +132,10 @@ template<>
 #ifdef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 ## endif
 ## if f.is_array_type == false
-		RTTI_BUILTIN_TYPE_SETTER_IMPL(&static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_TYPE_SETTER_IMPL((static_cast<{{ f.type }}*>(ptr)), value);
 ## else
 		RTTI_BUILTIN_ARRAY_TYPE_SETTER_IMPL({{ f.array_element_type }}, {{ f.array_elements_count }},
-			static_cast<{{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+			*(static_cast<std::add_pointer_t<{{ f.type }}>>(ptr)), value);
 ## endif
 ## if f.is_builtin_type
 #endif
@@ -142,7 +146,7 @@ template<>
 	{
 ## if f.is_builtin_type
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		value = static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }};
+		value = *static_cast<const {{ f.type }}*>(ptr);
 #endif
 
 ## endif
@@ -150,10 +154,10 @@ template<>
 #ifdef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
 ## endif
 ## if f.is_array_type == false
-		RTTI_BUILTIN_TYPE_GETTER_IMPL(&static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+		RTTI_BUILTIN_TYPE_GETTER_IMPL((static_cast<const {{ f.type }}*>(ptr)), value);
 ## else
 		RTTI_BUILTIN_ARRAY_TYPE_GETTER_IMPL({{ f.array_element_type }}, {{ f.array_elements_count }},
-			static_cast<const {{ c.full_name }}*>(ptr)->{{ f.name }}, value);
+			*(static_cast<std::add_pointer_t<const {{ f.type }}>>(ptr)), value);
 ## endif
 ## if f.is_builtin_type
 #endif
@@ -163,6 +167,11 @@ template<>
 	auto {{ f.name }}_get_addr = [](void* parent_ptr) noexcept -> void*
 	{
 		return &(({{ c.full_name }}*)parent_ptr)->{{ f.name }};
+	};
+
+	auto {{ f.name }}_get_const_addr = [](const void* parent_ptr) noexcept -> const void*
+	{
+		return &((const {{ c.full_name }}*)parent_ptr)->{{ f.name }};
 	};
 
 ## endfor
@@ -186,6 +195,7 @@ template<>
 				},
 				/* name                 */ "{{ f.name }}",
 				/* get_addr             */ {{ f.name }}_get_addr,
+				/* get_const_addr       */ {{ f.name }}_get_const_addr,
 				/* get_object_type_info */ &DB::get_object_type_info<{{ f.type }}>
 			},
 ## endfor

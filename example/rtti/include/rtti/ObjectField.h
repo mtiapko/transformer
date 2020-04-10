@@ -10,13 +10,13 @@ namespace rtti
 class ObjectField
 {
 private:
-	void* m_parent_ptr = nullptr;
+	void* m_field_ptr = nullptr;
 	const ObjectFieldInfo* m_field_info = nullptr;
 
 public:
 	ObjectField(std::nullptr_t) noexcept {}
-	ObjectField(void* parent_ptr, const ObjectFieldInfo* field_info) noexcept
-		: m_parent_ptr(parent_ptr)
+	ObjectField(void* field_ptr, const ObjectFieldInfo* field_info) noexcept
+		: m_field_ptr(field_ptr)
 		, m_field_info(field_info)
 	{}
 
@@ -32,14 +32,16 @@ public:
 			m_field_info->name, "' of type '", m_field_info->type_info.name,
 			"'. Failed to get subfield: ", name);
 
-		const object_type_info_fields_info_map_t::const_iterator subfield_iter
+		const object_type_info_fields_info_map_t::const_iterator subfield_info_iter
 			= object_type_info->fields_info_map.find(name);
 
-		if (subfield_iter == object_type_info->fields_info_map.cend())
+		if (subfield_info_iter == object_type_info->fields_info_map.cend())
 			return nullptr;
 
-		void* field_ptr = m_field_info->get_addr(m_parent_ptr);
-		return { field_ptr, subfield_iter->second };
+		const ObjectFieldInfo* subfield_info = subfield_info_iter->second;
+		void* subfield_ptr = subfield_info->get_addr(m_field_ptr);
+
+		return { subfield_ptr, subfield_info };
 	}
 
 	void set_value(const Variant& value) noexcept
@@ -47,7 +49,7 @@ public:
 		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. "
 			"Failed to set value: ", value);
 
-		m_field_info->type_info.setter(m_parent_ptr, value);
+		m_field_info->type_info.setter(m_field_ptr, value);
 	}
 
 	ObjectField& operator=(const Variant& value) noexcept
@@ -61,7 +63,7 @@ public:
 	{
 		RTTI_ASSERT(m_field_info != nullptr, "Object field not exists. Failed to get its value");
 
-		m_field_info->type_info.getter(m_parent_ptr, value);
+		m_field_info->type_info.getter(m_field_ptr, value);
 	}
 
 	Variant get_value() const noexcept;

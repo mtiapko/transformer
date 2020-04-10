@@ -29,13 +29,16 @@ public:
 		RTTI_ASSERT_RET(m_info != nullptr, nullptr,
 			"No RTTI for object. Failed to get field: ", name);
 
-		const object_type_info_fields_info_map_t::const_iterator field_iter
+		const object_type_info_fields_info_map_t::const_iterator field_info_iter
 			= m_info->fields_info_map.find(name);
 
-		if (field_iter == m_info->fields_info_map.cend())
+		if (field_info_iter == m_info->fields_info_map.cend())
 			return nullptr;
 
-		return { this, field_iter->second };
+		const ObjectFieldInfo* field_info = field_info_iter->second;
+		void* field_ptr = field_info->get_addr(this);
+
+		return { field_ptr, field_info };
 	}
 
 	void object_set_value(const Variant& value) noexcept

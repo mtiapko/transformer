@@ -12,7 +12,9 @@ struct ObjectFieldInfo
 
 	object_field_info_field_name_t name;
 
-	object_field_info_get_addr_t             get_addr;
+	object_field_info_get_addr_t       get_addr;
+	object_field_info_get_const_addr_t get_const_addr;
+
 	object_field_info_get_object_type_info_t get_object_type_info;
 };
 

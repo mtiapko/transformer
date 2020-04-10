@@ -119,6 +119,7 @@ using type_info_name_view_t = std::string;
 /* ObjectFieldInfo config */
 using object_field_info_field_name_t           = std::string;
 using object_field_info_get_addr_t             = void* (*)(void*) noexcept;
+using object_field_info_get_const_addr_t       = const void* (*)(const void*) noexcept;
 using object_field_info_get_object_type_info_t = const struct ObjectTypeInfo* (*)() noexcept;
 
 /* ObjectTypeInfo config */

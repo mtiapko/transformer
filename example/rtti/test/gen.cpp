@@ -122,7 +122,6 @@ template<>
 	const type_info_setter_t x_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<float*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
@@ -160,7 +159,6 @@ template<>
 	const type_info_setter_t y_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<float*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
@@ -321,7 +319,6 @@ template<>
 	const type_info_setter_t x_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<float*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, float, Point2D::x, float,    integer,  unsigned)
@@ -359,7 +356,6 @@ template<>
 	const type_info_setter_t y_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<float*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, float, Point2D::y, float,    integer,  unsigned)
@@ -397,7 +393,6 @@ template<>
 	const type_info_setter_t z_setter = [](void* ptr, const Variant& value) noexcept
 	{
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<float*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, float, Point3D::z, float,    integer,  unsigned)

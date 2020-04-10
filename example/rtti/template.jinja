@@ -119,7 +119,6 @@ template<>
 	{
 ## if f.is_builtin_type
 #ifndef RTTI_DISABLE_BUILTIN_TYPES_DEFAULT_SETTER_GETTER
-		// TODO: rewrite. ptr already must points to field
 		auto& ref = *static_cast<{{ f.type }}*>(ptr);
 
 		RTTI_BUILTIN_TYPE_SETTER(is_floating_point, {{ f.type }}, {{ f.full_name }}, float,    integer,  unsigned)

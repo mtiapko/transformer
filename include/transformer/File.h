@@ -11,7 +11,8 @@ class File
 {
 public:
 	static std::string read(const std::filesystem::path& file_path);
-	static void write(const std::filesystem::path& file_path, std::string_view data);
+	static void write(const std::filesystem::path& file_path, std::string_view data,
+		bool extra_new_line = false, bool append = false);
 };
 
 }

@@ -146,6 +146,17 @@ Generator::Generator(const Config& cfg, const Parser& parser)
 	auto tmpl = File::read(cfg.tmpl_file_path());
 	auto tmpl_content = Generator::create_tmpl_content(cfg, parser);
 
+	if (cfg.dump_tmpl_content()) {
+		if (!cfg.out_file_path().empty()) {
+			File::write(cfg.out_file_path(), tmpl_content.dump(4),
+				/* extra new line */ true, cfg.append_output());
+		} else {
+			std::cout << std::setw(4) << tmpl_content << '\n';
+		}
+
+		return;
+	}
+
 	auto env = inja::Environment {};
 	env.set_trim_blocks(!cfg.no_strip_first_newline());
 	env.set_lstrip_blocks(cfg.strip_beg_whitespaces());
@@ -154,8 +165,11 @@ Generator::Generator(const Config& cfg, const Parser& parser)
 		auto compiled_tmpl = env.parse(tmpl);
 		auto res = env.render(compiled_tmpl, tmpl_content);
 
-		if (!cfg.out_file_path().empty()) File::write(cfg.out_file_path(), res);
-		else std::cout << res;
+		if (!cfg.out_file_path().empty()) {
+			File::write(cfg.out_file_path(), res, /* extra new line */ false, cfg.append_output());
+		} else {
+			std::cout << res;
+		}
 	} catch (const inja::InjaError& e) {
 		TF_PRINT_ERR("[ inja  ] ", cfg.tmpl_file_path().native(), ' ', e.what());
 

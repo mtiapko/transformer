@@ -16,28 +16,35 @@ Options:
     -t --tmpl-file-path          template file path
     -s --src-file-path           source file path
     -o --out-file-path           output file path. default: stdout
+       --append-output           append output if writing to file
     -a --tmpl-arg                template argument to use when rendering
                                  can be used several times
        --no-strip-first-newline  not strip first newline after statement
        --strip-beg-whitespaces   strip tab/spaces from beginning of a line
+       --dump-tmpl-content       dump template content as JSON (dry run)
     -c --compiler-args           all subsequent arguments will be sent
                                  to the compiler
     -h --help                    show help (this) message
+
+Bug report: https://github.com/mtiapko/transformer/issues
 )";
 }
 
 Config::Config(int argc, char* const argv[])
 {
+	// TODO(FiTH): multi-template? or multi-source? or both (but how)?
 	const char* const short_opts = "t:s:o:a:c::h";
 	int long_opts_flag = 0;
 	const option long_opts[] = {
 		{ "tmpl-file-path",         required_argument, nullptr, 't' },
 		{ "src-file-path",          required_argument, nullptr, 's' },
 		{ "out-file-path",          required_argument, nullptr, 'o' },
+		{ "append-output",          no_argument,       &long_opts_flag, 'a' },
 		{ "tmpl-arg",               required_argument, nullptr, 'a' },
 		{ "no-strip-first-newline", no_argument,       &long_opts_flag, 'n' },
 		{ "strip-beg-whitespaces",  no_argument,       &long_opts_flag, 'w' },
 		{ "compiler-args",          optional_argument, nullptr, 'c' },
+		{ "dump-tmpl-content",      no_argument,       &long_opts_flag, 'd' },
 		{ "help",                   no_argument,       nullptr, 'h' },
 		{}
 	};
@@ -77,8 +84,10 @@ Config::Config(int argc, char* const argv[])
 				break;
 			case 0:
 				switch (long_opts_flag) {
+					case 'a': m_append_output = true; break;
 					case 'n': m_no_strip_first_newline = true; break;
 					case 'w': m_strip_beg_whitespaces = true; break;
+					case 'd': m_dump_tmpl_content = true; break;
 					default:
 						throw TF_EXCEPTION("Unexpected long option. Internal command line arguments parser error");
 				}

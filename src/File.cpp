@@ -43,19 +43,27 @@ namespace
 	return data;
 }
 
-/* static */ void File::write(const std::filesystem::path& file_path, std::string_view data)
+/* static */ void File::write(const std::filesystem::path& file_path, std::string_view data,
+	bool extra_new_line /* = false */, bool append /* = false */)
 {
 	std::ofstream file;
 	file.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 
 	try {
-		file.open(file_path, std::ios::out | std::ios::binary);
+		file.open(file_path, std::ios::binary
+			| (append
+				? std::ios::out | std::ios::app
+				: std::ios::out));
+
 	} catch (const std::ios_base::failure&) {
 		print_error_and_exit(file_path.native(), "open for writing", TF_LOG_FMT);
 	}
 
 	try {
 		file.write(data.data(), data.size());
+
+		if (extra_new_line)
+			file.write("\n", 1);
 	} catch (const std::ios_base::failure&) {
 		print_error_and_exit(file_path.native(), "write to", TF_LOG_FMT);
 	}

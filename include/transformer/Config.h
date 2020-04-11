@@ -16,8 +16,10 @@ private:
 
 	std::vector<std::pair<std::string_view, std::string_view>> m_tmpl_args;
 
+	bool m_append_output = false;
 	bool m_no_strip_first_newline = false;
 	bool m_strip_beg_whitespaces = false;
+	bool m_dump_tmpl_content = false;
 
 	int                m_compiler_argc;
 	const char* const* m_compiler_argv;
@@ -33,8 +35,10 @@ public:
 
 	const auto& tmpl_args() const noexcept { return m_tmpl_args; }
 
+	bool append_output() const noexcept { return m_append_output; }
 	bool no_strip_first_newline() const noexcept { return m_no_strip_first_newline; }
 	bool strip_beg_whitespaces() const noexcept { return m_strip_beg_whitespaces; }
+	bool dump_tmpl_content() const noexcept { return m_dump_tmpl_content; }
 
 	auto compiler_argc() const noexcept { return m_compiler_argc; }
 	auto compiler_argv() const noexcept { return m_compiler_argv; }

@@ -6,35 +6,42 @@
 namespace transformer
 {
 
+/* static */ inja::json Generator::create_entity_tmpl_content(const Entity& e) noexcept
+{
+	return {
+		{ /* entity_ */ "file_path",  e.file_path()  },
+		{ /* entity_ */ "full_name",  e.full_name()  },
+		{ /* entity_ */ "name",       e.name()       },
+		{ /* entity_ */ "attributes", e.attributes() }
+	};
+}
+
+/* static */ inja::json Generator::create_entity_tmpl_content(const Entity& e, inja::json content) noexcept
+{
+	inja::json j = Generator::create_entity_tmpl_content(e);
+
+	content.insert(j.begin(), j.end());
+	return content;
+}
+
 /* static */ inja::json Generator::create_class_tmpl_content(const Parser& p, const Class& c) noexcept
 {
 	std::vector<inja::json> base_classes_list;
 	base_classes_list.reserve(c.base_classes().size());
 	for (auto base_id: c.base_classes()) {
 		const auto& b = p.classes().entities()[base_id];
-		base_classes_list.emplace_back(Generator::create_base_class_tmpl_content(b));
+		base_classes_list.emplace_back(Generator::create_entity_tmpl_content(b));
 	}
 
 	std::vector<inja::json> fields_list;
 	fields_list.reserve(c.fields().size()); /* NOTE(FiTH): reserve only for class field, w/o fields from base classes */
 	Generator::create_recursive_class_fields_tmpl_content(p, c, fields_list);
 
-	return {
-		{ /* class_ */ "file_path",    c.file_path()                },
-		{ /* class_ */ "full_name",    c.full_name()                },
-		{ /* class_ */ "name",         c.name()                     },
+	return Generator::create_entity_tmpl_content(c,
+	{
 		{ /* class_ */ "base_classes", std::move(base_classes_list) },
 		{ /* class_ */ "fields",       std::move(fields_list)       }
-	};
-}
-
-/* static */ inja::json Generator::create_base_class_tmpl_content(const Class& b) noexcept
-{
-	return {
-		{ /* base_class_ */ "file_path", b.file_path() },
-		{ /* base_class_ */ "full_name", b.full_name() },
-		{ /* base_class_ */ "name",      b.name()      }
-	};
+	});
 }
 
 /* static */ void Generator::create_recursive_class_fields_tmpl_content(const Parser& p, const Class& c,
@@ -51,17 +58,15 @@ namespace transformer
 
 /* static */ inja::json Generator::create_class_field_tmpl_content(const ClassField& f) noexcept
 {
-	inja::json j = {
-		{ /* field_ */ "file_path",       f.file_path()       },
-		{ /* field_ */ "full_name",       f.full_name()       },
-		{ /* field_ */ "name",            f.name()            },
+	inja::json j = Generator::create_entity_tmpl_content(f,
+	{
 		{ /* field_ */ "type",            f.type()            },
-		/* -------------------------------------------------- */
+		/* ------------------------------------------------- */
 		{ /* field_ */ "is_builtin_type", f.is_builtin_type() },
 		{ /* field_ */ "is_pointer_type", f.is_pointer_type() },
 		{ /* field_ */ "is_array_type",   f.is_array_type()   },
-		{ /* field_ */ "is_enum_type",    f.is_enum_type()    },
-	};
+		{ /* field_ */ "is_enum_type",    f.is_enum_type()    }
+	});
 
 	if (f.is_array_type()) {
 		j.emplace(/* field_ */ "array_element_type", f.element_type());
@@ -81,13 +86,11 @@ namespace transformer
 	for (const auto& c: e.consts())
 		consts_list.emplace_back(Generator::create_enum_const_tmpl_content(e, c));
 
-	return {
-		{ /* enum_ */ "file_path",    e.file_path()          },
-		{ /* enum_ */ "full_name",    e.full_name()          },
-		{ /* enum_ */ "name",         e.name()               },
+	return Generator::create_entity_tmpl_content(e,
+	{
 		{ /* enum_ */ "integer_type", e.integer_type()       },
 		{ /* enum_ */ "consts",       std::move(consts_list) }
-	};
+	});
 }
 
 /* static */ inja::json Generator::create_enum_const_tmpl_content(const Enum& e, const EnumConst& c) noexcept
@@ -96,12 +99,10 @@ namespace transformer
 		? std::to_string(c.unsigned_value())
 		: std::to_string(c.signed_value()));
 
-	return {
-		{ /* const_ */ "file_path", c.file_path()    },
-		{ /* const_ */ "full_name", c.full_name()    },
-		{ /* const_ */ "name",      c.name()         },
-		{ /* const_ */ "value",     std::move(value) }
-	};
+	return Generator::create_entity_tmpl_content(e,
+	{
+		{ /* const_ */ "value", std::move(value) }
+	});
 }
 
 /* static */ inja::json Generator::create_tmpl_content(const Config& cfg, const Parser& parser) noexcept

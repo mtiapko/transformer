@@ -8,10 +8,18 @@ Variable::Variable(CXCursor cur) noexcept
 	: Entity(cur)
 {
 	auto cxtype = clang_getCanonicalType(clang_getCursorType(cur));
+
+	CXCursor type_cursor = clang_getTypeDeclaration(cxtype);
+	if (clang_Cursor_isAnonymous(type_cursor)) {
+		m_type = "decltype(";
+		m_type += this->full_name();
+		m_type += ')';
+	} else {
+		m_type = Util::to_string(clang_getTypeSpelling(cxtype));
+	}
+
+	// TODO(FiTH): is type is <anonymous> this checks are useless?
 	auto kind = cxtype.kind;
-
-	m_type = Util::to_string(clang_getTypeSpelling(cxtype));
-
 	m_is_builtin_type = (CXType_FirstBuiltin <= kind && kind <= CXType_LastBuiltin);
 	m_is_pointer_type = (kind == CXType_Pointer);
 	m_is_array_type = (kind == CXType_ConstantArray || kind == CXType_IncompleteArray);
@@ -30,6 +38,16 @@ Variable::Variable(CXCursor cur) noexcept
 			? clang_getArraySize(cxtype)
 			: std::numeric_limits<size_t>::max());
 	}
+
+	CXTranslationUnit tu       = clang_Cursor_getTranslationUnit(cur);
+	CXSourceLocation cur_loc   = clang_getCursorLocation(cur);
+
+	CXSourceRange cur_range    = clang_getCursorExtent(cur);
+	CXSourceLocation begin_loc = clang_getRangeStart(cur_range);
+
+	this->parse_attributes(tu, begin_loc, -1);
+	this->parse_attributes(tu, cur_loc, -1);
+	this->parse_attributes(tu, cur_loc, this->name().size());
 }
 
 }

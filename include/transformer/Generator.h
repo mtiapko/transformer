@@ -10,8 +10,9 @@ namespace transformer
 class Generator
 {
 private:
+	static inja::json create_entity_tmpl_content(const Entity& e) noexcept;
+	static inja::json create_entity_tmpl_content(const Entity& e, inja::json content) noexcept;
 	static inja::json create_class_tmpl_content(const Parser& p, const Class& c) noexcept;
-	static inja::json create_base_class_tmpl_content(const Class& b) noexcept;
 	static void create_recursive_class_fields_tmpl_content(const Parser& p, const Class& c,
 		std::vector<inja::json>& fields_list) noexcept;
 	static inja::json create_class_field_tmpl_content(const ClassField& f) noexcept;

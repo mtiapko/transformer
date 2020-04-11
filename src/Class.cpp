@@ -26,6 +26,7 @@ namespace transformer
 		}
 
 		case CXCursor_FieldDecl: c->add_field(cur); break;
+		case CXCursor_CXXMethod: break;
 		default: break;
 	}
 

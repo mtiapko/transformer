@@ -13,6 +13,8 @@ private:
 
 	bool m_is_builtin_type = false;
 	bool m_is_pointer_type = false;
+	bool m_is_lvalue_reference_type = false;
+	bool m_is_rvalue_reference_type = false;
 	bool m_is_array_type = false;
 	bool m_is_enum_type = false;
 
@@ -27,8 +29,10 @@ public:
 
 	bool is_builtin_type() const noexcept { return m_is_builtin_type; }
 	bool is_pointer_type() const noexcept { return m_is_pointer_type; }
-	bool is_array_type()   const noexcept { return m_is_array_type;   }
-	bool is_enum_type()    const noexcept { return m_is_enum_type;    }
+	bool is_lvalue_reference_type() const noexcept { return m_is_lvalue_reference_type; }
+	bool is_rvalue_reference_type() const noexcept { return m_is_rvalue_reference_type; }
+	bool is_array_type() const noexcept { return m_is_array_type; }
+	bool is_enum_type() const noexcept { return m_is_enum_type; }
 
 	bool is_incomplete_array() const noexcept { return (m_elements_count == std::numeric_limits<size_t>::max()); }
 	const auto& element_type() const noexcept { return m_element_type; }

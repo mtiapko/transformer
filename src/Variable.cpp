@@ -8,8 +8,8 @@ Variable::Variable(CXCursor cur) noexcept
 	: Entity(cur)
 {
 	auto cxtype = clang_getCanonicalType(clang_getCursorType(cur));
-
 	CXCursor type_cursor = clang_getTypeDeclaration(cxtype);
+
 	if (clang_Cursor_isAnonymous(type_cursor)) {
 		m_type = "decltype(";
 		m_type += this->full_name();
@@ -22,6 +22,8 @@ Variable::Variable(CXCursor cur) noexcept
 	auto kind = cxtype.kind;
 	m_is_builtin_type = (CXType_FirstBuiltin <= kind && kind <= CXType_LastBuiltin);
 	m_is_pointer_type = (kind == CXType_Pointer);
+	m_is_lvalue_reference_type = (kind == CXType_LValueReference);
+	m_is_rvalue_reference_type = (kind == CXType_RValueReference);
 	m_is_array_type = (kind == CXType_ConstantArray || kind == CXType_IncompleteArray);
 	m_is_enum_type = (kind == CXType_Enum);
 

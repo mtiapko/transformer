@@ -24,6 +24,31 @@ namespace transformer
 	return content;
 }
 
+/* static */ inja::json Generator::create_variable_tmpl_content(const Variable& v) noexcept
+{
+	inja::json j = Generator::create_entity_tmpl_content(v,
+	{
+		{ /* variable_ */ "type",            v.type()                              },
+		/* ---------------------------------------------------------------------- */
+		{ /* variable_ */ "is_builtin_type",          v.is_builtin_type()          },
+		{ /* variable_ */ "is_pointer_type",          v.is_pointer_type()          },
+		{ /* variable_ */ "is_lvalue_reference_type", v.is_lvalue_reference_type() },
+		{ /* variable_ */ "is_rvalue_reference_type", v.is_rvalue_reference_type() },
+		{ /* variable_ */ "is_array_type",            v.is_array_type()            },
+		{ /* variable_ */ "is_enum_type",             v.is_enum_type()             }
+	});
+
+	if (v.is_array_type()) {
+		j.emplace(/* variable_ */ "array_element_type", v.element_type());
+		j.emplace(/* variable_ */ "is_incomplete_array", v.is_incomplete_array());
+
+		if (!v.is_incomplete_array())
+			j.emplace(/* variable_ */ "array_elements_count", v.elements_count());
+	}
+
+	return j;
+}
+
 /* static */ inja::json Generator::create_class_tmpl_content(const Parser& p, const Class& c) noexcept
 {
 	std::vector<inja::json> base_classes_list;
@@ -37,10 +62,15 @@ namespace transformer
 	fields_list.reserve(c.fields().size()); /* NOTE(FiTH): reserve only for class field, w/o fields from base classes */
 	Generator::create_recursive_class_fields_tmpl_content(p, c, fields_list);
 
+	std::vector<inja::json> methods_list;
+	for (const auto& m: c.methods())
+		methods_list.emplace_back(Generator::create_class_method_tmpl_content(m));
+
 	return Generator::create_entity_tmpl_content(c,
 	{
 		{ /* class_ */ "base_classes", std::move(base_classes_list) },
-		{ /* class_ */ "fields",       std::move(fields_list)       }
+		{ /* class_ */ "fields",       std::move(fields_list)       },
+		{ /* class_ */ "methods",      std::move(methods_list)      }
 	});
 }
 
@@ -58,25 +88,22 @@ namespace transformer
 
 /* static */ inja::json Generator::create_class_field_tmpl_content(const ClassField& f) noexcept
 {
-	inja::json j = Generator::create_entity_tmpl_content(f,
+	return Generator::create_variable_tmpl_content(f);
+}
+
+/* static */ inja::json Generator::create_class_method_tmpl_content(const ClassMethod& m) noexcept
+{
+	std::vector<inja::json> args_list;
+	for (const auto& arg: m.args())
+		args_list.emplace_back(Generator::create_variable_tmpl_content(arg));
+
+	return Generator::create_entity_tmpl_content(m,
 	{
-		{ /* field_ */ "type",            f.type()            },
-		/* ------------------------------------------------- */
-		{ /* field_ */ "is_builtin_type", f.is_builtin_type() },
-		{ /* field_ */ "is_pointer_type", f.is_pointer_type() },
-		{ /* field_ */ "is_array_type",   f.is_array_type()   },
-		{ /* field_ */ "is_enum_type",    f.is_enum_type()    }
+		{ /* method_ */ "return_type", m.return_type()      },
+		{ /* method_ */ "args",        std::move(args_list) },
+		{ /* method_ */ "is_const",    m.is_const()         },
+		{ /* method_ */ "is_static",   m.is_static()        }
 	});
-
-	if (f.is_array_type()) {
-		j.emplace(/* field_ */ "array_element_type", f.element_type());
-		j.emplace(/* field_ */ "is_incomplete_array", f.is_incomplete_array());
-
-		if (!f.is_incomplete_array())
-			j.emplace(/* field_ */ "array_elements_count", f.elements_count());
-	}
-
-	return j;
 }
 
 /* static */ inja::json Generator::create_enum_tmpl_content(const Enum& e) noexcept

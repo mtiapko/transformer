@@ -38,6 +38,10 @@ Class::Class(Parser* parser, CXCursor cur, std::string full_name) noexcept
 {
 	auto closure = std::make_pair(parser, this);
 	clang_visitChildren(cur, Class::visitor, &closure);
+
+	CXTranslationUnit tu = clang_Cursor_getTranslationUnit(cur);
+	CXSourceLocation cur_loc = clang_getCursorLocation(cur);
+	this->add_attribute(this->parse_attributes(tu, cur_loc, -1));
 }
 
 }

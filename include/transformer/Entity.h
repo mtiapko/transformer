@@ -26,13 +26,15 @@ public:
 	Entity(CXCursor cur) noexcept;
 	Entity(CXCursor cur, std::string full_name) noexcept;
 
+	void add_attribute(std::string_view attribute) noexcept;
+
 	bool is_from_main_file() const noexcept { return m_is_from_main_file; }
 	const auto& file_path() const noexcept { return m_file_path; }
 	const auto& full_name() const noexcept { return m_full_name; }
 	const auto& name() const noexcept { return m_name; }
 	const auto& attributes() const noexcept { return m_attributes; }
 
-	void parse_attributes(const CXTranslationUnit& tu,
+	static std::string parse_attributes(const CXTranslationUnit& tu,
 		const CXSourceLocation& loc, int32_t offset) noexcept;
 };
 

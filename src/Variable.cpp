@@ -47,9 +47,9 @@ Variable::Variable(CXCursor cur) noexcept
 	CXSourceRange cur_range    = clang_getCursorExtent(cur);
 	CXSourceLocation begin_loc = clang_getRangeStart(cur_range);
 
-	this->parse_attributes(tu, begin_loc, -1);
-	this->parse_attributes(tu, cur_loc, -1);
-	this->parse_attributes(tu, cur_loc, this->name().size());
+	this->add_attribute(this->parse_attributes(tu, begin_loc, -1));
+	this->add_attribute(this->parse_attributes(tu, cur_loc, -1));
+	this->add_attribute(this->parse_attributes(tu, cur_loc, this->name().size()));
 }
 
 }

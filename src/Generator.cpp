@@ -167,10 +167,6 @@ namespace transformer
 
 Generator::Generator(const Config& cfg, const Parser& parser)
 {
-	if (cfg.tmpl_file_path().empty())
-		return;
-
-	auto tmpl = File::read(cfg.tmpl_file_path());
 	auto tmpl_content = Generator::create_tmpl_content(cfg, parser);
 
 	if (cfg.dump_tmpl_content()) {
@@ -184,10 +180,14 @@ Generator::Generator(const Config& cfg, const Parser& parser)
 		return;
 	}
 
+	if (cfg.tmpl_file_path().empty())
+		return;
+
 	auto env = inja::Environment {};
 	env.set_trim_blocks(!cfg.no_strip_first_newline());
 	env.set_lstrip_blocks(cfg.strip_beg_whitespaces());
 
+	auto tmpl = File::read(cfg.tmpl_file_path());
 	try {
 		auto compiled_tmpl = env.parse(tmpl);
 		auto res = env.render(compiled_tmpl, tmpl_content);

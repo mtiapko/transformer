@@ -124,7 +124,18 @@ CXSourceLocation Entity::find_double_char_location(const CXTranslationUnit& tu,
 	return clang_getNullLocation();
 }
 
-void Entity::parse_attributes(const CXTranslationUnit& tu,
+void Entity::add_attribute(std::string_view attribute) noexcept
+{
+	if (attribute.empty())
+		return;
+
+	if (!m_attributes.empty())
+		m_attributes += ' '; // TODO(FiTH): or ", "?
+
+	m_attributes += attribute;
+}
+
+/* static */ std::string Entity::parse_attributes(const CXTranslationUnit& tu,
 	const CXSourceLocation& loc, int32_t offset) noexcept
 {
 	CXSourceLocation end = clang_getNullLocation();
@@ -133,19 +144,19 @@ void Entity::parse_attributes(const CXTranslationUnit& tu,
 	if (offset < 0) {
 		end = find_double_char_location(tu, loc, "]", offset, false);
 		if (clang_equalLocations(end, clang_getNullLocation()))
-			return;
+			return {};
 
 		beg = find_double_char_location(tu, end, "[", offset, true);
 		if (clang_equalLocations(beg, clang_getNullLocation()))
-			return;
+			return {};
 	} else {
 		beg = find_double_char_location(tu, loc, "[", offset, false);
 		if (clang_equalLocations(beg, clang_getNullLocation()))
-			return;
+			return {};
 
 		end = find_double_char_location(tu, beg, "]", 0, true);
 		if (clang_equalLocations(end, clang_getNullLocation()))
-			return;
+			return {};
 	}
 
 	CXSourceRange tokens_range = clang_getRange(beg, end);
@@ -156,9 +167,7 @@ void Entity::parse_attributes(const CXTranslationUnit& tu,
 
 	TokenPtr tokens { tu, cxtokens, cxtokens_count };
 
-	if (!m_attributes.empty())
-		m_attributes += ' '; // TODO(FiTH): or ", " ?
-
+	std::string attribute;
 	uint32_t cur_offset = std::numeric_limits<uint32_t>::max();
 	for (uint32_t i = 0; i < tokens.count(); ++i) {
 		CXSourceLocation cur_tok_loc = clang_getRangeStart(clang_getTokenExtent(tu, tokens[i]));
@@ -167,15 +176,17 @@ void Entity::parse_attributes(const CXTranslationUnit& tu,
 		clang_getSpellingLocation(cur_tok_loc, nullptr, nullptr, nullptr, &offset);
 
 		if (offset > cur_offset)
-			m_attributes += ' ';
+			attribute += ' ';
 
 		cur_tok_loc = clang_getRangeEnd(clang_getTokenExtent(tu, tokens[i]));
 		clang_getSpellingLocation(cur_tok_loc, nullptr, nullptr, nullptr, &offset);
 
 		cur_offset = offset;
 
-		m_attributes += Util::to_string(clang_getTokenSpelling(tu, tokens[i]));
+		attribute += Util::to_string(clang_getTokenSpelling(tu, tokens[i]));
 	}
+
+	return attribute;
 }
 
 }

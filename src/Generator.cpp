@@ -160,7 +160,10 @@ namespace transformer
 	};
 
 	for (const auto& [name, value]: cfg.tmpl_args())
-		tmpl_content.emplace(name, std::string { value });
+		tmpl_content.emplace(name, value);
+
+	for (const auto& [name, value]: cfg.tmpl_json_args())
+		tmpl_content.emplace(name, inja::json::parse(value));
 
 	return tmpl_content;
 }

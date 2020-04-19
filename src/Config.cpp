@@ -17,8 +17,10 @@ Options:
     -s --src-file-path           source file path
     -o --out-file-path           output file path. default: stdout
        --append-output           append output if writing to file
-    -a --tmpl-arg                template argument to use when rendering
-                                 can be used several times
+    -a --tmpl-arg                template argument to use when rendering.
+                                 Can be used several times. Ex.: -a key:val
+    -j --tmpl-json-arg           JSON string as argument for template.
+                                 Can be used several times
        --no-strip-first-newline  not strip first newline after statement
        --strip-beg-whitespaces   strip tab/spaces from beginning of a line
        --dump-tmpl-content       dump template content as JSON (dry run)
@@ -33,7 +35,7 @@ Bug report: https://github.com/mtiapko/transformer/issues
 Config::Config(int argc, char* const argv[])
 {
 	// TODO(FiTH): multi-template? or multi-source? or both (but how)?
-	const char* const short_opts = "t:s:o:a:c::h";
+	const char* const short_opts = "t:s:o:a:j:c::h";
 	int long_opts_flag = 0;
 	const option long_opts[] = {
 		{ "tmpl-file-path",         required_argument, nullptr, 't' },
@@ -41,6 +43,7 @@ Config::Config(int argc, char* const argv[])
 		{ "out-file-path",          required_argument, nullptr, 'o' },
 		{ "append-output",          no_argument,       &long_opts_flag, 'a' },
 		{ "tmpl-arg",               required_argument, nullptr, 'a' },
+		{ "tmpl-json-arg",          required_argument, nullptr, 'j' },
 		{ "no-strip-first-newline", no_argument,       &long_opts_flag, 'n' },
 		{ "strip-beg-whitespaces",  no_argument,       &long_opts_flag, 'w' },
 		{ "compiler-args",          optional_argument, nullptr, 'c' },
@@ -59,7 +62,12 @@ Config::Config(int argc, char* const argv[])
 			case 't': m_tmpl_file_path = optarg; break;
 			case 's': m_src_file_path = optarg; break;
 			case 'o': m_out_file_path = optarg; break;
+			case 'j': [[fallthrough]];
 			case 'a': {
+				auto& tmpl_args = (opt == 'a'
+					? m_tmpl_args
+					: m_tmpl_json_args);
+
 				const auto arg = std::string_view { optarg };
 				if (const auto delim_pos = arg.find(':'); delim_pos != std::string::npos) {
 					const size_t first_pos = 0;
@@ -68,12 +76,12 @@ Config::Config(int argc, char* const argv[])
 					const size_t second_pos = delim_pos + 1;
 					const size_t second_count = arg.size() - second_pos;
 
-					m_tmpl_args.emplace_back(
+					tmpl_args.emplace_back(
 						std::string_view { arg.data() + first_pos, first_count },
 						std::string_view { arg.data() + second_pos, second_count }
 					);
 				} else {
-					m_tmpl_args.emplace_back(arg, std::string_view { "true" });
+					tmpl_args.emplace_back(arg, std::string_view { "true" });
 				}
 
 				break;
@@ -117,6 +125,9 @@ Config::Config(int argc, char* const argv[])
 		m_compiler_argc = argc - optind;
 		m_compiler_argv = argv + optind;
 	}
+
+	if (m_src_file_path.empty())
+		throw TF_EXCEPTION("Too dump template content you must specify source file path");
 }
 
 }

@@ -68,7 +68,7 @@ Parser::Parser(const Config& cfg)
 		if (!std::filesystem::exists(cfg.src_file_path()))
 			throw TF_EXCEPTION("Source file '", cfg.src_file_path().native(), "' does not exist");
 
-		throw TF_EXCEPTION("Failed to parse translation unit: ",
+		throw TF_EXCEPTION("Clang failed to parse translation unit: ",
 			cfg.src_file_path().native());
 	}
 

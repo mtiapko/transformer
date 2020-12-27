@@ -6,11 +6,18 @@
 namespace transformer
 {
 
-/* static */ void Config::print_help()
+/* static */ void Config::print_basic_usage(std::string_view program_path) noexcept
+{
+	std::cerr
+		<< "Usage: " << program_path << " <tmpl-file-path> <src-file-path> [options]...\n"
+		<< "Try '" << program_path << " --help' for more information.\n";
+}
+
+/* static */ void Config::print_help(std::string_view program_path) noexcept
 {
 	std::cerr << R"(
 Usage:
-    transformerformer <tmpl-file-path> <src-file-path> [options] [compiler args]...
+    )" << program_path << R"( <tmpl-file-path> <src-file-path> [options]... -- [compiler args]...
 
 Options:
     -t --tmpl-file-path          template file path
@@ -18,13 +25,13 @@ Options:
     -o --out-file-path           output file path. default: stdout
        --append-output           append output if writing to file
     -a --tmpl-arg                template argument to use when rendering.
-                                 Can be used several times. Ex.: -a key:val
+                                 Can be used several times. Ex.: -a key or -a key:val
     -j --tmpl-json-arg           JSON string as argument for template.
                                  Can be used several times
        --no-strip-first-newline  not strip first newline after statement
        --strip-beg-whitespaces   strip tab/spaces from beginning of a line
        --dump-tmpl-content       dump template content as JSON (dry run)
-    -c --compiler-args           all subsequent arguments will be sent
+    -c --compiler-args (or --)   all subsequent arguments will be sent
                                  to the compiler
     -h --help                    show help (this) message
 
@@ -35,7 +42,7 @@ Bug report: https://github.com/mtiapko/transformer/issues
 Config::Config(int argc, char* const argv[])
 {
 	// TODO(FiTH): multi-template? or multi-source? or both (but how)?
-	const char* const short_opts = "t:s:o:a:j:c::h";
+	const char* const short_opts = "-t:s:o:a:j:c::h";
 	int long_opts_flag = 0;
 	const option long_opts[] = {
 		{ "tmpl-file-path",         required_argument, nullptr, 't' },
@@ -52,8 +59,16 @@ Config::Config(int argc, char* const argv[])
 		{}
 	};
 
-	int compiler_args_pos = -1;
-	while (true) {
+	if (argc == 1) {
+		Config::print_basic_usage(argv[0]);
+		std::exit(EXIT_SUCCESS);
+	}
+
+	decltype(optind) last_parsed_arg_index = -1;
+
+	bool continue_args_parsing = true;
+	while (continue_args_parsing) {
+		last_parsed_arg_index = optind;
 		const auto opt = getopt_long(argc, argv, short_opts, long_opts, nullptr);
 		if (opt == -1)
 			break;
@@ -87,8 +102,7 @@ Config::Config(int argc, char* const argv[])
 				break;
 			}
 			case 'c':
-				compiler_args_pos = optind;
-				optind = argc;
+				continue_args_parsing = false;
 				break;
 			case 0:
 				switch (long_opts_flag) {
@@ -101,8 +115,14 @@ Config::Config(int argc, char* const argv[])
 				}
 
 				break;
+			case 1:
+				if      (m_tmpl_file_path.empty()) m_tmpl_file_path = optarg;
+				else if (m_src_file_path.empty())  m_src_file_path  = optarg;
+				else throw TF_EXCEPTION("Unexpected argument: ", optarg);
+
+				break;
 			default:
-				Config::print_help();
+				Config::print_help(argv[0]);
 				if (opt != 'h')
 					throw TF_EXCEPTION("Failed to parse command line arguments");
 
@@ -110,24 +130,12 @@ Config::Config(int argc, char* const argv[])
 		}
 	}
 
-	const auto final_optind = optind;
-	if (m_tmpl_file_path.empty() && optind < argc)
-		m_tmpl_file_path = argv[optind++];
-
-
-	if (m_src_file_path.empty() && optind < argc)
-		m_src_file_path = argv[optind++];
-
-	if (compiler_args_pos != -1) {
-		m_compiler_argc = argc - compiler_args_pos;
-		m_compiler_argv = argv + compiler_args_pos - (optind - final_optind);
-	} else {
-		m_compiler_argc = argc - optind;
-		m_compiler_argv = argv + optind;
+	// Initial value of last_parsed_arg_index must be -1,
+	// so command 'transformer -- -v' will be valid.
+	if (++last_parsed_arg_index < argc) {
+		m_compiler_argc = argc - last_parsed_arg_index;
+		m_compiler_argv = argv + last_parsed_arg_index; // TODO(FiTH): argv[argc] == nullptr?
 	}
-
-	if (m_src_file_path.empty())
-		throw TF_EXCEPTION("Too dump template content you must specify source file path");
 }
 
 }

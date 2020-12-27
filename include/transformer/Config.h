@@ -22,10 +22,11 @@ private:
 	bool m_strip_beg_whitespaces = false;
 	bool m_dump_tmpl_content = false;
 
-	int                m_compiler_argc;
-	const char* const* m_compiler_argv;
+	int                m_compiler_argc = 0;
+	const char* const* m_compiler_argv = nullptr;
 
-	static void print_help();
+	static void print_basic_usage(std::string_view program_path) noexcept;
+	static void print_help(std::string_view program_path) noexcept;
 
 public:
 	Config(int argc, char* const argv[]);

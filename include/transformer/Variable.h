@@ -1,6 +1,7 @@
 #ifndef __TRANSFORMER_VARIABLE_H__
 #define __TRANSFORMER_VARIABLE_H__
 
+#include <limits>
 #include "transformer/Entity.h"
 
 namespace transformer

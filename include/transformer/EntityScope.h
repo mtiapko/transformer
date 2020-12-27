@@ -2,6 +2,7 @@
 #define __TRANSFORMER_ENTITY_SCOPE_H__
 
 #include <vector>
+#include <string>
 #include <assert.h>
 #include <unordered_map>
 #include <clang-c/Index.h>

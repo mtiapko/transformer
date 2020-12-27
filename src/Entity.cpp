@@ -1,3 +1,4 @@
+#include <limits>
 #include "transformer/TokenPtr.h"
 #include "transformer/Entity.h"
 #include "transformer/Util.h"

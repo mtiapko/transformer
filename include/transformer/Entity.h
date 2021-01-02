@@ -35,7 +35,7 @@ public:
 	const auto& attributes() const noexcept { return m_attributes; }
 
 	static std::string parse_attributes(const CXTranslationUnit& tu,
-		const CXSourceLocation& loc, int32_t offset) noexcept;
+		const CXSourceLocation& loc, int32_t offset = -1) noexcept;
 };
 
 }

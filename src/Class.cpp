@@ -25,8 +25,9 @@ namespace transformer
 			break;
 		}
 
-		case CXCursor_FieldDecl: c->add_field(cur); break;
-		case CXCursor_CXXMethod: c->add_method(cur); break;
+		case CXCursor_FieldDecl:   c->add_field(cur);       break;
+		case CXCursor_CXXMethod:   c->add_method(cur);      break;
+		case CXCursor_Constructor: c->add_constructor(cur); break;
 		default: break;
 	}
 
@@ -41,7 +42,7 @@ Class::Class(Parser* parser, CXCursor cur, std::string full_name) noexcept
 
 	CXTranslationUnit tu = clang_Cursor_getTranslationUnit(cur);
 	CXSourceLocation cur_loc = clang_getCursorLocation(cur);
-	this->add_attribute(this->parse_attributes(tu, cur_loc, -1));
+	this->add_attribute(this->parse_attributes(tu, cur_loc));
 }
 
 }

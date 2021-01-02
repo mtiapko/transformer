@@ -66,11 +66,16 @@ namespace transformer
 	for (const auto& m: c.methods())
 		methods_list.emplace_back(Generator::create_class_method_tmpl_content(m));
 
+	std::vector<inja::json> constructors_list;
+	for (const auto& m: c.constructors())
+		constructors_list.emplace_back(Generator::create_class_constructor_tmpl_content(m));
+
 	return Generator::create_entity_tmpl_content(c,
 	{
 		{ /* class_ */ "base_classes", std::move(base_classes_list) },
 		{ /* class_ */ "fields",       std::move(fields_list)       },
-		{ /* class_ */ "methods",      std::move(methods_list)      }
+		{ /* class_ */ "methods",      std::move(methods_list)      },
+		{ /* class_ */ "constructors", std::move(constructors_list) }
 	});
 }
 
@@ -91,19 +96,30 @@ namespace transformer
 	return Generator::create_variable_tmpl_content(f);
 }
 
-/* static */ inja::json Generator::create_class_method_tmpl_content(const ClassMethod& m) noexcept
+/* static */ inja::json Generator::create_class_callable_entity_tmpl_content(const ClassCallableEntity& c, inja::json content) noexcept
 {
 	std::vector<inja::json> args_list;
-	for (const auto& arg: m.args())
+	for (const auto& arg: c.args())
 		args_list.emplace_back(Generator::create_variable_tmpl_content(arg));
 
-	return Generator::create_entity_tmpl_content(m,
+	content.emplace("args", std::move(args_list));
+
+	return Generator::create_entity_tmpl_content(c, std::move(content));
+}
+
+/* static */ inja::json Generator::create_class_method_tmpl_content(const ClassMethod& m) noexcept
+{
+	return Generator::create_class_callable_entity_tmpl_content(m,
 	{
-		{ /* method_ */ "return_type", m.return_type()      },
-		{ /* method_ */ "args",        std::move(args_list) },
-		{ /* method_ */ "is_const",    m.is_const()         },
-		{ /* method_ */ "is_static",   m.is_static()        }
+		{ /* method_ */ "return_type", m.return_type() },
+		{ /* method_ */ "is_const",    m.is_const()    },
+		{ /* method_ */ "is_static",   m.is_static()   }
 	});
+}
+
+/* static */ inja::json Generator::create_class_constructor_tmpl_content(const ClassConstructor& c) noexcept
+{
+	return Generator::create_class_callable_entity_tmpl_content(c, /* empty content */ {});
 }
 
 /* static */ inja::json Generator::create_enum_tmpl_content(const Enum& e) noexcept

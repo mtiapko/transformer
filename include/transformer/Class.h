@@ -3,6 +3,7 @@
 
 #include "transformer/ClassField.h"
 #include "transformer/ClassMethod.h"
+#include "transformer/ClassConstructor.h"
 
 namespace transformer
 {
@@ -10,9 +11,10 @@ namespace transformer
 class Class : public Entity
 {
 private:
-	std::vector<size_t>      m_base_classes_id;
-	std::vector<ClassField>  m_fields;
-	std::vector<ClassMethod> m_methods;
+	std::vector<size_t>           m_base_classes_id;
+	std::vector<ClassField>       m_fields;
+	std::vector<ClassMethod>      m_methods;
+	std::vector<ClassConstructor> m_constructors;
 
 	static CXChildVisitResult visitor(CXCursor cur, CXCursor /* parent */,
 		CXClientData closure) noexcept;
@@ -28,6 +30,9 @@ public:
 
 	auto add_method(CXCursor cur) noexcept { m_methods.emplace_back(cur); }
 	const auto& methods() const noexcept { return m_methods; }
+
+	auto add_constructor(CXCursor cur) noexcept { m_constructors.emplace_back(cur); }
+	const auto& constructors() const noexcept { return m_constructors; }
 };
 
 }

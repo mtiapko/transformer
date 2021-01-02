@@ -18,7 +18,7 @@ Variable::Variable(CXCursor cur) noexcept
 		m_type = Util::to_string(clang_getTypeSpelling(cxtype));
 	}
 
-	// TODO(FiTH): is type is <anonymous> this checks are useless?
+	// TODO(FiTH): if type is <anonymous> this checks are useless?
 	auto kind = cxtype.kind;
 	m_is_builtin_type = (CXType_FirstBuiltin <= kind && kind <= CXType_LastBuiltin);
 	m_is_pointer_type = (kind == CXType_Pointer);
@@ -47,9 +47,10 @@ Variable::Variable(CXCursor cur) noexcept
 	CXSourceRange cur_range    = clang_getCursorExtent(cur);
 	CXSourceLocation begin_loc = clang_getRangeStart(cur_range);
 
-	this->add_attribute(this->parse_attributes(tu, begin_loc, -1));
-	this->add_attribute(this->parse_attributes(tu, cur_loc, -1));
-	this->add_attribute(this->parse_attributes(tu, cur_loc, this->name().size()));
+	this->add_attribute(this->parse_attributes(tu, begin_loc));                    // [[...]] int a;
+	this->add_attribute(this->parse_attributes(tu, cur_loc));                      // int [[...]] a;
+	this->add_attribute(this->parse_attributes(tu, cur_loc, this->name().size())); // int a [[...]];
+	// TODO(FiTH): int arr[1] [[...]]
 }
 
 }

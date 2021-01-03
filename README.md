@@ -3,8 +3,9 @@ Tool for parsing C/C++ code and generating output using a given **Jinja**-like t
 
 Currently supported features:
 - struct/class fields parsing
+- struct/class methods (including constructors) parsing
 - enum parsing
-- generation output using **[Jinja](https://palletsprojects.com/p/jinja/)**-like template
+- generate output using **[Jinja](https://palletsprojects.com/p/jinja/)**-like template
 - [C++ custom attributes](https://en.cppreference.com/w/cpp/language/attributes) support
 
 # Table of contents (TODO)

@@ -1,15 +1,16 @@
 #include <fstream>
+
 #include "transformer/File.h"
 #include "transformer/Log.h"
 
 namespace transformer
 {
 
-namespace
+namespace /* anonymous */
 {
 	template<typename... Args>
 	[[noreturn]] void print_error_and_exit(std::string_view file_path,
-		std::string_view op, const Args&... args)
+		std::string_view op, const Args&... args) noexcept
 	{
 		TF_LOG_ERROR_IMPL(args..., "Failed to ", op, " file '", file_path, "': ",
 			std::generic_category().message(errno));

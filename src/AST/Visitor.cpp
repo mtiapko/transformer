@@ -1,6 +1,9 @@
 #include <clang/Basic/SourceManager.h>
+#include <clang/Lex/Lexer.h>
 
 #include "transformer/AST/Visitor.h"
+
+// TODO(FiTH): check 'clang::StringRef' to 'json' conversion
 
 namespace
 {
@@ -58,15 +61,23 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 
 /* static */ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) noexcept
 {
+	CHECK_FLAG(isTemplateDecl);
 	CHECK_FLAG(isInStdNamespace);
 	CHECK_FLAG(isInAnonymousNamespace);
+
+	auto decl_access = decl->getAccess();
+	if (decl_access != clang::AccessSpecifier::AS_none)
+		content["access"] = clang::getAccessSpelling(decl_access);
 }
 
 /* static */ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
 	inja::json& content) noexcept
 {
-	content["decl_name"] = decl->getDeclName().getAsString(); // TODO
-	content["name"] = decl->getName();
+	auto& content_name = content["name"];
+	const auto* decl_identifier = decl->getIdentifier();
+	if (decl_identifier != nullptr) content_name = decl_identifier->getName();
+	else content_name = decl->getNameAsString();
+
 	content["full_name"] = decl->getQualifiedNameAsString();
 }
 
@@ -100,11 +111,10 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 
 		e["name"] = decl_enumerator->getName();
 
+		auto& e_value = e["value"];
 		int64_t val = decl_enumerator->getInitVal().getExtValue();
-		if (decl_enumerator->getInitVal().isSigned() == false)
-			e["value"] = static_cast<uint64_t>(val);
-		else
-			e["value"] = val;
+		if (decl_enumerator->getInitVal().isSigned()) e_value = val;
+		else e_value = static_cast<uint64_t>(val);
 	}
 }
 
@@ -126,9 +136,31 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	CHECK_FLAG(isStatic);
 	CHECK_FLAG(isOverloadedOperator);
 
+	// TODO(FiTH):
+	//    - check 'noexcept' of this func
+	//    - check 'const' of this func
+
 	content["return_type"] = decl->getReturnType().getAsString(m_printing_policy);
 
-	// TODO(FiTH): check 'noexcept' of this func
+	auto& parameters = content["parameters"];
+	for (const auto& decl_parameter: decl->parameters()) {
+		auto& param = parameters.emplace_back();
+
+		this->gen_type_content(decl_parameter->getType(), param);
+		Visitor::gen_named_decl_content(decl_parameter, param);
+
+		const bool hasDefaultArg = decl_parameter->hasDefaultArg();
+		param["has_default_arg"] = hasDefaultArg;
+
+		if (hasDefaultArg) {
+			const auto& default_arg_range = clang::CharSourceRange::getCharRange(decl_parameter->getDefaultArgRange());
+			const auto& text = clang::Lexer::getSourceText(default_arg_range,
+				m_context.getSourceManager(), m_context.getLangOpts());
+
+			// TODO(FiTH): fix this, does not work
+			param["default_arg"] = std::string_view { text.data(), text.size() };
+		}
+	}
 }
 
 /* static */ void Visitor::gen_class_dflt_ctor_content(const clang::CXXRecordDecl* decl,
@@ -227,8 +259,6 @@ void Visitor::gen_class_field_full_content(const clang::FieldDecl* decl,
 {
 	Visitor::gen_named_decl_content(decl, content);
 	this->gen_type_content(decl->getType(), content);
-
-	content["access"] = clang::getAccessSpelling(decl->getAccess());
 }
 
 void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
@@ -261,15 +291,19 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	CHECK_FLAG(allowConstDefaultInit);
 
 	Visitor::gen_class_dflt_ctor_content  (decl, content["default_ctor"]);
-	Visitor::gen_class_copy_ctor_content  (decl, content["copy_ctor"]   );
-	Visitor::gen_class_move_ctor_content  (decl, content["move_ctor"]   );
-	Visitor::gen_class_copy_assign_content(decl, content["copy_assign"] );
-	Visitor::gen_class_move_assign_content(decl, content["move_assign"] );
-	Visitor::gen_class_destructor_content (decl, content["destructor"]  );
+	Visitor::gen_class_copy_ctor_content  (decl, content["copy_ctor"   ]);
+	Visitor::gen_class_move_ctor_content  (decl, content["move_ctor"   ]);
+	Visitor::gen_class_copy_assign_content(decl, content["copy_assign" ]);
+	Visitor::gen_class_move_assign_content(decl, content["move_assign" ]);
+	Visitor::gen_class_destructor_content (decl, content["destructor"  ]);
 
 	auto& bases_content = content["base_classes"];
 	for (const auto& base: decl->bases())
 		this->gen_class_base_full_content(base, bases_content.emplace_back());
+
+	auto& conv_funcs_content = content["conversion_functions"];
+	for (const auto& conv_func: decl->getVisibleConversionFunctions())
+		Visitor::gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
 
 	auto& fields_content = content["fields"];
 	for (const auto& field: decl->fields())
@@ -286,9 +320,10 @@ Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noe
 	: m_context(context)
 	, m_printing_policy(context.getPrintingPolicy())
 
-	, m_tmpl_content(tmpl_content           )
-	, m_tmpl_classes(tmpl_content["classes"])
-	, m_tmpl_enums  (tmpl_content["enums"]  )
+	, m_tmpl_content(tmpl_content             )
+	, m_tmpl_classes(tmpl_content["classes"  ])
+	, m_tmpl_enums  (tmpl_content["enums"    ])
+	, m_tmpl_funcs  (tmpl_content["functions"])
 {}
 
 bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcept
@@ -323,6 +358,24 @@ bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) const noexcept
 		Visitor::gen_tag_decl_content(decl, content);
 
 		this->gen_enum_decl_content(decl, content);
+	}
+
+	return true;
+}
+
+bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
+{
+	if (this->is_from_main_file(decl) == false)
+		return true;
+
+	// visit only non-member functions
+	if (decl->getAccess() == clang::AccessSpecifier::AS_none) {
+		auto& content = m_tmpl_funcs.emplace_back();
+
+		Visitor::gen_decl_content(decl, content);
+		Visitor::gen_named_decl_content(decl, content);
+
+		this->gen_func_decl_content(decl, content);
 	}
 
 	return true;

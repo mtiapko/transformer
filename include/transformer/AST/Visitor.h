@@ -16,6 +16,7 @@ private:
 	inja::json& m_tmpl_content;
 	inja::json& m_tmpl_classes;
 	inja::json& m_tmpl_enums;
+	inja::json& m_tmpl_funcs;
 
 private:
 	bool is_from_main_file(const clang::Decl* decl) const noexcept;
@@ -47,6 +48,7 @@ public:
 
 	bool VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcept;
 	bool VisitEnumDecl(const clang::EnumDecl* decl) const noexcept;
+	bool VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept;
 };
 
 }

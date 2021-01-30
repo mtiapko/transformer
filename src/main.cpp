@@ -4,6 +4,7 @@
 
 #include "transformer/AST/Action.h"
 #include "transformer/Config.h"
+#include "transformer/File.h"
 
 namespace
 {
@@ -26,6 +27,7 @@ public:
 
 int main(int argc, const char* argv[])
 {
+	// setup parser (parse arguments)
 	auto opt_parser = clang::tooling::CommonOptionsParser::create(argc, argv,
 		transformer::Config::options_category, llvm::cl::NumOccurrencesFlag::ZeroOrMore);
 
@@ -37,8 +39,25 @@ int main(int argc, const char* argv[])
 	inja::json tmpl_content;
 	auto action = std::make_unique<SimpleFrontendActionFactory>(tmpl_content);
 
+	// parse cpp code
 	int ret = transformer_tool.run(action.get());
-	std::cout << std::setw(4) << tmpl_content << '\n';
+	if (ret != EXIT_SUCCESS)
+		return ret;
+
+	std::cout << "-----------------\n" << std::setw(4) << tmpl_content << "\n======================\n";
+
+	// generate output
+	auto env = inja::Environment {};
+	env.set_trim_blocks(true);
+
+	auto tmpl = transformer::File::read(transformer::Config::tmpl_file_path_opt.getValue());
+	auto compiled_tmpl = env.parse(tmpl);
+
+	auto output = env.render(compiled_tmpl, tmpl_content);
+	if (transformer::Config::output_file_path_opt.empty() == false)
+		transformer::File::write(transformer::Config::output_file_path_opt.getValue(), output);
+	else
+		std::cout << output;
 
 	return ret;
 }

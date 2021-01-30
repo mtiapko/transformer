@@ -1,17 +1,63 @@
-#include "transformer/Exception.h"
-#include "transformer/Generator.h"
-#include "transformer/Log.h"
+#include <clang/Tooling/CommonOptionsParser.h>
+#include <clang/Tooling/Tooling.h>
+#include <iomanip> // TODO(FiTH): remove
 
-int main(int argc, char* argv[])
+#include "transformer/AST/Action.h"
+#include "transformer/Config.h"
+#include "transformer/File.h"
+
+namespace
 {
-	try {
-		transformer::Config    config { argc, argv };
-		transformer::Parser    parser { config };
-		transformer::Generator gen    { config, parser };
-	} catch (const transformer::Exception& e) {
-		TF_PRINT_ERR(e);
-		return EXIT_FAILURE;
-	}
 
-	return EXIT_SUCCESS;
+class SimpleFrontendActionFactory : public clang::tooling::FrontendActionFactory
+{
+public:
+	inja::json& m_tmpl_content;
+
+public:
+	SimpleFrontendActionFactory(inja::json& tmpl_content) noexcept
+		: m_tmpl_content(tmpl_content)
+	{}
+
+	std::unique_ptr<clang::FrontendAction> create() noexcept override
+		{ return std::make_unique<transformer::AST::Action>(m_tmpl_content); }
+};
+
+}
+
+int main(int argc, const char* argv[])
+{
+	// setup parser (parse arguments)
+	auto opt_parser = clang::tooling::CommonOptionsParser::create(argc, argv,
+		transformer::Config::options_category, llvm::cl::NumOccurrencesFlag::ZeroOrMore);
+
+	if (!opt_parser)
+		return EXIT_FAILURE;
+
+	clang::tooling::ClangTool transformer_tool(opt_parser->getCompilations(), opt_parser->getSourcePathList());
+
+	inja::json tmpl_content;
+	auto action = std::make_unique<SimpleFrontendActionFactory>(tmpl_content);
+
+	// parse cpp code
+	int ret = transformer_tool.run(action.get());
+	if (ret != EXIT_SUCCESS)
+		return ret;
+
+	std::cout << "-----------------\n" << std::setw(4) << tmpl_content << "\n======================\n";
+
+	// generate output
+	auto env = inja::Environment {};
+	env.set_trim_blocks(true);
+
+	auto tmpl = transformer::File::read(transformer::Config::tmpl_file_path_opt.getValue());
+	auto compiled_tmpl = env.parse(tmpl);
+
+	auto output = env.render(compiled_tmpl, tmpl_content);
+	if (transformer::Config::output_file_path_opt.empty() == false)
+		transformer::File::write(transformer::Config::output_file_path_opt.getValue(), output);
+	else
+		std::cout << output;
+
+	return ret;
 }

@@ -3,7 +3,19 @@
 
 #include "transformer/AST/Visitor.h"
 
-// TODO(FiTH): check 'clang::StringRef' to 'json' conversion
+// TODO(FiTH): check 'llvm::StringRef' to 'json' conversion
+
+namespace nlohmann {
+	template<>
+	struct adl_serializer<llvm::StringRef> {
+		static void to_json(json& j, const llvm::StringRef& str) {
+			if (str.empty())
+				j = nullptr;
+
+			j = std::string_view { str.data(), str.size() };
+		}
+	};
+}
 
 namespace
 {
@@ -47,16 +59,17 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
 }
 
-#define CHECK_FLAG_OF_PTR(decl, flag) content[str_to_lower_case(#flag).data()] = decl->flag()
-#define CHECK_FLAG_OF(decl, flag)     CHECK_FLAG_OF_PTR((&decl), flag)
-#define CHECK_FLAG(flag)              CHECK_FLAG_OF_PTR(decl, flag)
+#define CHECK_FLAG_OF_PTR(name, decl, flag) content[str_to_lower_case(#name).data()] = decl->flag()
+#define CHECK_FLAG_OF(decl, flag)           CHECK_FLAG_OF_PTR(flag, (&decl), flag)
+#define CHECK_FLAG(flag)                    CHECK_FLAG_OF_PTR(flag, decl, flag)
+#define CHECK_FLAG_WITH_NAME(flag, name)    CHECK_FLAG_OF_PTR(name, decl, flag)
 
 
 void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) const noexcept
 {
-	content["type"] = type.getAsString(m_printing_policy);
-
 	CHECK_FLAG_OF(type, isConstQualified);
+
+	content["type"] = type.getAsString(m_printing_policy);
 }
 
 /* static */ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) noexcept
@@ -75,10 +88,14 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 {
 	auto& content_name = content["name"];
 	const auto* decl_identifier = decl->getIdentifier();
-	if (decl_identifier != nullptr) content_name = decl_identifier->getName();
-	else content_name = decl->getNameAsString();
+	if (decl_identifier != nullptr)
+		content_name = decl_identifier->getName();
+	else if (const auto& name = decl->getNameAsString(); name.empty() == false)
+		content_name = name;
 
-	content["full_name"] = decl->getQualifiedNameAsString();
+	auto& content_full_name = content["full_name"];
+	if (const auto& full_name = decl->getQualifiedNameAsString(); full_name.empty() == false)
+		content_full_name = full_name;
 }
 
 /* static */ void Visitor::gen_tag_decl_content(const clang::TagDecl* decl,
@@ -135,6 +152,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	CHECK_FLAG(isInlineSpecified);
 	CHECK_FLAG(isStatic);
 	CHECK_FLAG(isOverloadedOperator);
+	CHECK_FLAG_WITH_NAME(getMinRequiredArguments, MinRequiredArguments); // TODO(FiTH): rename to SET_VALUE?
 
 	// TODO(FiTH):
 	//    - check 'noexcept' of this func
@@ -309,10 +327,19 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	for (const auto& field: decl->fields())
 		this->gen_class_field_full_content(field, fields_content.emplace_back());
 
-	auto& methods_content = content["methods"];
+	auto& methods_content                    = content["methods"];
+	auto& constructors_content               = content["constructors"];
+	auto& overloaded_operators_equal_content = content["overloaded_operators_equal"];
+
 	for (const auto& method: decl->methods()) {
-		if (method->isThisDeclarationADefinition() && method->isImplicit() == false)
-			this->gen_class_method_full_content(method, methods_content.emplace_back());
+		inja::json* content_ptr = (llvm::isa<clang::CXXConstructorDecl>(method)
+			? &constructors_content
+			: method->getOverloadedOperator() == clang::OverloadedOperatorKind::OO_Equal
+				? &overloaded_operators_equal_content
+				: &methods_content
+		);
+
+		this->gen_class_method_full_content(method, content_ptr->emplace_back());
 	}
 }
 
@@ -381,6 +408,7 @@ bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
 	return true;
 }
 
+#undef CHECK_FLAG_WITH_NAME
 #undef CHECK_FLAG
 #undef CHECK_FLAG_OF
 #undef CHECK_FLAG_OF_PTR

@@ -59,24 +59,24 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
 }
 
-#define CHECK_FLAG_OF_PTR(name, decl, flag) content[str_to_lower_case(#name).data()] = decl->flag()
-#define CHECK_FLAG_OF(decl, flag)           CHECK_FLAG_OF_PTR(flag, (&decl), flag)
-#define CHECK_FLAG(flag)                    CHECK_FLAG_OF_PTR(flag, decl, flag)
-#define CHECK_FLAG_WITH_NAME(flag, name)    CHECK_FLAG_OF_PTR(name, decl, flag)
+#define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
+#define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
+#define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
+#define SET_VALUE_WITH_NAME(value, name)    SET_VALUE_OF_PTR(name, decl, value)
 
 
 void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) const noexcept
 {
-	CHECK_FLAG_OF(type, isConstQualified);
+	SET_VALUE_OF(type, isConstQualified);
 
 	content["type"] = type.getAsString(m_printing_policy);
 }
 
 /* static */ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) noexcept
 {
-	CHECK_FLAG(isTemplateDecl);
-	CHECK_FLAG(isInStdNamespace);
-	CHECK_FLAG(isInAnonymousNamespace);
+	SET_VALUE(isTemplateDecl);
+	SET_VALUE(isInStdNamespace);
+	SET_VALUE(isInAnonymousNamespace);
 
 	auto decl_access = decl->getAccess();
 	if (decl_access != clang::AccessSpecifier::AS_none)
@@ -101,24 +101,24 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 /* static */ void Visitor::gen_tag_decl_content(const clang::TagDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(isStruct);
-	CHECK_FLAG(isClass);
-	CHECK_FLAG(isUnion);
-	CHECK_FLAG(isEnum);
+	SET_VALUE(isStruct);
+	SET_VALUE(isClass);
+	SET_VALUE(isUnion);
+	SET_VALUE(isEnum);
 }
 
 /* static */ void Visitor::gen_record_decl_content(const clang::RecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(isAnonymousStructOrUnion);
+	SET_VALUE(isAnonymousStructOrUnion);
 }
 
 void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 	inja::json& content) const noexcept
 {
-	CHECK_FLAG(isScoped);
-	CHECK_FLAG(isScopedUsingClassTag);
-	CHECK_FLAG(isFixed);
+	SET_VALUE(isScoped);
+	SET_VALUE(isScopedUsingClassTag);
+	SET_VALUE(isFixed);
 
 	content["integer_type"] = decl->getIntegerType().getAsString(m_printing_policy);
 
@@ -138,21 +138,21 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	inja::json& content) const noexcept
 {
-	CHECK_FLAG(isVariadic);
-	CHECK_FLAG(isVirtualAsWritten);
-	CHECK_FLAG(isPure);
-	CHECK_FLAG(isTrivial);
-	CHECK_FLAG(isDefaulted);
-	CHECK_FLAG(isExplicitlyDefaulted);
-	CHECK_FLAG(isUserProvided);
-	CHECK_FLAG(isConstexpr);
-	CHECK_FLAG(isConsteval);
-	CHECK_FLAG(isDeleted);
-	CHECK_FLAG(isDeletedAsWritten);
-	CHECK_FLAG(isInlineSpecified);
-	CHECK_FLAG(isStatic);
-	CHECK_FLAG(isOverloadedOperator);
-	CHECK_FLAG_WITH_NAME(getMinRequiredArguments, MinRequiredArguments); // TODO(FiTH): rename to SET_VALUE?
+	SET_VALUE(isVariadic);
+	SET_VALUE(isVirtualAsWritten);
+	SET_VALUE(isPure);
+	SET_VALUE(isTrivial);
+	SET_VALUE(isDefaulted);
+	SET_VALUE(isExplicitlyDefaulted);
+	SET_VALUE(isUserProvided);
+	SET_VALUE(isConstexpr);
+	SET_VALUE(isConsteval);
+	SET_VALUE(isDeleted);
+	SET_VALUE(isDeletedAsWritten);
+	SET_VALUE(isInlineSpecified);
+	SET_VALUE(isStatic);
+	SET_VALUE(isOverloadedOperator);
+	SET_VALUE_WITH_NAME(getMinRequiredArguments, MinRequiredArguments); // TODO(FiTH): rename to SET_VALUE?
 
 	// TODO(FiTH):
 	//    - check 'noexcept' of this func
@@ -184,89 +184,89 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 /* static */ void Visitor::gen_class_dflt_ctor_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasDefaultConstructor);
-	CHECK_FLAG(hasTrivialDefaultConstructor);
-	CHECK_FLAG(hasNonTrivialDefaultConstructor);
-	CHECK_FLAG(hasUserProvidedDefaultConstructor);
-	CHECK_FLAG(hasConstexprDefaultConstructor);
-	CHECK_FLAG(needsImplicitDefaultConstructor);
-	CHECK_FLAG(defaultedDefaultConstructorIsConstexpr);
+	SET_VALUE(hasDefaultConstructor);
+	SET_VALUE(hasTrivialDefaultConstructor);
+	SET_VALUE(hasNonTrivialDefaultConstructor);
+	SET_VALUE(hasUserProvidedDefaultConstructor);
+	SET_VALUE(hasConstexprDefaultConstructor);
+	SET_VALUE(needsImplicitDefaultConstructor);
+	SET_VALUE(defaultedDefaultConstructorIsConstexpr);
 }
 
 /* static */ void Visitor::gen_class_copy_ctor_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasSimpleCopyConstructor);
-	CHECK_FLAG(hasTrivialCopyConstructor);
-	CHECK_FLAG(hasNonTrivialCopyConstructor);
-	CHECK_FLAG(hasUserDeclaredCopyConstructor);
-	CHECK_FLAG(hasCopyConstructorWithConstParam);
-	CHECK_FLAG(needsImplicitCopyConstructor);
-	CHECK_FLAG(needsOverloadResolutionForCopyConstructor);
-	CHECK_FLAG(implicitCopyConstructorHasConstParam);
+	SET_VALUE(hasSimpleCopyConstructor);
+	SET_VALUE(hasTrivialCopyConstructor);
+	SET_VALUE(hasNonTrivialCopyConstructor);
+	SET_VALUE(hasUserDeclaredCopyConstructor);
+	SET_VALUE(hasCopyConstructorWithConstParam);
+	SET_VALUE(needsImplicitCopyConstructor);
+	SET_VALUE(needsOverloadResolutionForCopyConstructor);
+	SET_VALUE(implicitCopyConstructorHasConstParam);
 	if (decl->needsOverloadResolutionForCopyConstructor() == false)
-		CHECK_FLAG(defaultedCopyConstructorIsDeleted);
+		SET_VALUE(defaultedCopyConstructorIsDeleted);
 }
 
 /* static */ void Visitor::gen_class_move_ctor_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasMoveConstructor);
-	CHECK_FLAG(hasSimpleMoveConstructor);
-	CHECK_FLAG(hasTrivialMoveConstructor);
-	CHECK_FLAG(hasNonTrivialMoveConstructor);
-	CHECK_FLAG(hasUserDeclaredMoveConstructor);
-	CHECK_FLAG(needsImplicitMoveConstructor);
-	CHECK_FLAG(needsOverloadResolutionForMoveConstructor);
+	SET_VALUE(hasMoveConstructor);
+	SET_VALUE(hasSimpleMoveConstructor);
+	SET_VALUE(hasTrivialMoveConstructor);
+	SET_VALUE(hasNonTrivialMoveConstructor);
+	SET_VALUE(hasUserDeclaredMoveConstructor);
+	SET_VALUE(needsImplicitMoveConstructor);
+	SET_VALUE(needsOverloadResolutionForMoveConstructor);
 	if (decl->needsOverloadResolutionForMoveConstructor() == false)
-		CHECK_FLAG(defaultedMoveConstructorIsDeleted);
+		SET_VALUE(defaultedMoveConstructorIsDeleted);
 }
 
 /* static */ void Visitor::gen_class_copy_assign_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasSimpleCopyAssignment);
-	CHECK_FLAG(hasTrivialCopyAssignment);
-	CHECK_FLAG(hasNonTrivialCopyAssignment);
-	CHECK_FLAG(hasCopyAssignmentWithConstParam);
-	CHECK_FLAG(hasUserDeclaredCopyAssignment);
-	CHECK_FLAG(needsImplicitCopyAssignment);
-	CHECK_FLAG(needsOverloadResolutionForCopyAssignment);
-	CHECK_FLAG(implicitCopyAssignmentHasConstParam);
+	SET_VALUE(hasSimpleCopyAssignment);
+	SET_VALUE(hasTrivialCopyAssignment);
+	SET_VALUE(hasNonTrivialCopyAssignment);
+	SET_VALUE(hasCopyAssignmentWithConstParam);
+	SET_VALUE(hasUserDeclaredCopyAssignment);
+	SET_VALUE(needsImplicitCopyAssignment);
+	SET_VALUE(needsOverloadResolutionForCopyAssignment);
+	SET_VALUE(implicitCopyAssignmentHasConstParam);
 }
 
 /* static */ void Visitor::gen_class_move_assign_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasMoveAssignment);
-	CHECK_FLAG(hasSimpleMoveAssignment);
-	CHECK_FLAG(hasTrivialMoveAssignment);
-	CHECK_FLAG(hasNonTrivialMoveAssignment);
-	CHECK_FLAG(hasUserDeclaredMoveAssignment);
-	CHECK_FLAG(needsImplicitMoveAssignment);
-	CHECK_FLAG(needsOverloadResolutionForMoveAssignment);
+	SET_VALUE(hasMoveAssignment);
+	SET_VALUE(hasSimpleMoveAssignment);
+	SET_VALUE(hasTrivialMoveAssignment);
+	SET_VALUE(hasNonTrivialMoveAssignment);
+	SET_VALUE(hasUserDeclaredMoveAssignment);
+	SET_VALUE(needsImplicitMoveAssignment);
+	SET_VALUE(needsOverloadResolutionForMoveAssignment);
 }
 
 /* static */ void Visitor::gen_class_destructor_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) noexcept
 {
-	CHECK_FLAG(hasSimpleDestructor);
-	CHECK_FLAG(hasIrrelevantDestructor);
-	CHECK_FLAG(hasTrivialDestructor);
-	CHECK_FLAG(hasNonTrivialDestructor);
-	CHECK_FLAG(hasUserDeclaredDestructor);
-	CHECK_FLAG(hasConstexprDestructor);
-	CHECK_FLAG(needsImplicitDestructor);
-	CHECK_FLAG(needsOverloadResolutionForDestructor);
+	SET_VALUE(hasSimpleDestructor);
+	SET_VALUE(hasIrrelevantDestructor);
+	SET_VALUE(hasTrivialDestructor);
+	SET_VALUE(hasNonTrivialDestructor);
+	SET_VALUE(hasUserDeclaredDestructor);
+	SET_VALUE(hasConstexprDestructor);
+	SET_VALUE(needsImplicitDestructor);
+	SET_VALUE(needsOverloadResolutionForDestructor);
 	if (decl->needsOverloadResolutionForDestructor() == false)
-		CHECK_FLAG(defaultedDestructorIsDeleted);
+		SET_VALUE(defaultedDestructorIsDeleted);
 }
 
 void Visitor::gen_class_base_full_content(const clang::CXXBaseSpecifier& base,
 	inja::json& content) const noexcept
 {
-	CHECK_FLAG_OF(base, isVirtual);
-	CHECK_FLAG_OF(base, getInheritConstructors);
+	SET_VALUE_OF(base, isVirtual);
+	SET_VALUE_OF(base, getInheritConstructors);
 
 	content["name"] = base.getType().getAsString(m_printing_policy);
 	content["access_specifier"] = clang::getAccessSpelling(base.getAccessSpecifier());
@@ -290,23 +290,23 @@ void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
 void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	inja::json& content) const noexcept
 {
-	CHECK_FLAG(isEmpty);
-	CHECK_FLAG(isAggregate);
-	CHECK_FLAG(isStandardLayout);
-	CHECK_FLAG(isTriviallyCopyable);
-	CHECK_FLAG(isPOD);
-	CHECK_FLAG(isTrivial);
-	CHECK_FLAG(isPolymorphic);
-	CHECK_FLAG(isAbstract);
-	CHECK_FLAG(isLiteral);
+	SET_VALUE(isEmpty);
+	SET_VALUE(isAggregate);
+	SET_VALUE(isStandardLayout);
+	SET_VALUE(isTriviallyCopyable);
+	SET_VALUE(isPOD);
+	SET_VALUE(isTrivial);
+	SET_VALUE(isPolymorphic);
+	SET_VALUE(isAbstract);
+	SET_VALUE(isLiteral);
 
 	content["is_local_class"] = (decl->isLocalClass() != nullptr);
 
-	CHECK_FLAG(hasUserDeclaredConstructor);
-	CHECK_FLAG(hasConstexprNonCopyMoveConstructor);
-	CHECK_FLAG(hasMutableFields);
-	CHECK_FLAG(hasVariantMembers);
-	CHECK_FLAG(allowConstDefaultInit);
+	SET_VALUE(hasUserDeclaredConstructor);
+	SET_VALUE(hasConstexprNonCopyMoveConstructor);
+	SET_VALUE(hasMutableFields);
+	SET_VALUE(hasVariantMembers);
+	SET_VALUE(allowConstDefaultInit);
 
 	Visitor::gen_class_dflt_ctor_content  (decl, content["default_ctor"]);
 	Visitor::gen_class_copy_ctor_content  (decl, content["copy_ctor"   ]);
@@ -408,9 +408,9 @@ bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
 	return true;
 }
 
-#undef CHECK_FLAG_WITH_NAME
-#undef CHECK_FLAG
-#undef CHECK_FLAG_OF
-#undef CHECK_FLAG_OF_PTR
+#undef SET_VALUE_WITH_NAME
+#undef SET_VALUE
+#undef SET_VALUE_OF
+#undef SET_VALUE_OF_PTR
 
 }

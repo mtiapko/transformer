@@ -64,7 +64,6 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
 #define SET_VALUE_WITH_NAME(value, name)    SET_VALUE_OF_PTR(name, decl, value)
 
-
 void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) const noexcept
 {
 	SET_VALUE_OF(type, isConstQualified);
@@ -152,7 +151,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	SET_VALUE(isInlineSpecified);
 	SET_VALUE(isStatic);
 	SET_VALUE(isOverloadedOperator);
-	SET_VALUE_WITH_NAME(getMinRequiredArguments, MinRequiredArguments); // TODO(FiTH): rename to SET_VALUE?
+	SET_VALUE_WITH_NAME(getMinRequiredArguments, MinRequiredArguments);
 
 	// TODO(FiTH):
 	//    - check 'noexcept' of this func
@@ -172,11 +171,10 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 
 		if (hasDefaultArg) {
 			const auto& default_arg_range = clang::CharSourceRange::getCharRange(decl_parameter->getDefaultArgRange());
-			const auto& text = clang::Lexer::getSourceText(default_arg_range,
-				m_context.getSourceManager(), m_context.getLangOpts());
 
 			// TODO(FiTH): fix this, does not work
-			param["default_arg"] = std::string_view { text.data(), text.size() };
+			param["default_arg"] = clang::Lexer::getSourceText(default_arg_range,
+				m_context.getSourceManager(), m_context.getLangOpts());
 		}
 	}
 }

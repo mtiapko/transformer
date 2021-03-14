@@ -27,6 +27,8 @@ public:
 
 int main(int argc, const char* argv[])
 {
+	// TODO(FiTH): https://llvm.org/docs/CommandLine.html
+
 	// setup parser (parse arguments)
 	auto opt_parser = clang::tooling::CommonOptionsParser::create(argc, argv,
 		transformer::Config::options_category, llvm::cl::NumOccurrencesFlag::ZeroOrMore);
@@ -44,11 +46,18 @@ int main(int argc, const char* argv[])
 	if (ret != EXIT_SUCCESS)
 		return ret;
 
-	std::cout << "-----------------\n" << std::setw(4) << tmpl_content << "\n======================\n";
-
 	// generate output
 	auto env = inja::Environment {};
 	env.set_trim_blocks(true);
+
+	// add custom callbacks
+	env.add_callback("valueOr", 2, [](inja::Arguments& args)
+	{
+		if (args.at(0)->is_null())
+			return *args.at(1);
+
+		return *args.at(0);
+	});
 
 	auto tmpl = transformer::File::read(transformer::Config::tmpl_file_path_opt.getValue());
 	auto compiled_tmpl = env.parse(tmpl);

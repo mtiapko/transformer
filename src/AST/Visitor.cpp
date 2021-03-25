@@ -71,7 +71,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 	content["type"] = type.getAsString(m_printing_policy);
 }
 
-/* static */ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) noexcept
+void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept
 {
 	SET_VALUE(isTemplateDecl);
 	SET_VALUE(isInStdNamespace);
@@ -80,6 +80,9 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 	auto decl_access = decl->getAccess();
 	if (decl_access != clang::AccessSpecifier::AS_none)
 		content["access"] = clang::getAccessSpelling(decl_access);
+
+	const auto& src_mgr = m_context.getSourceManager();
+	content["filename"] = src_mgr.getFilename(decl->getLocation());
 }
 
 /* static */ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
@@ -280,7 +283,7 @@ void Visitor::gen_class_field_full_content(const clang::FieldDecl* decl,
 void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
 	inja::json& content) const noexcept
 {
-	Visitor::gen_decl_content(decl, content);
+	this->gen_decl_content(decl, content);
 	Visitor::gen_named_decl_content(decl, content);
 	this->gen_func_decl_content(decl, content);
 }
@@ -356,10 +359,11 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcep
 	if (this->is_from_main_file(decl) == false)
 		return true;
 
-	if (decl->isCompleteDefinition()) {
+	// NOTE(FiTH): decl->isAnonymousStructOrUnion() does not work for some reason
+	if (decl->isCompleteDefinition() && decl->getIdentifier() != nullptr) {
 		auto& content = m_tmpl_classes.emplace_back();
 
-		Visitor::gen_decl_content(decl, content);
+		this->gen_decl_content(decl, content);
 		Visitor::gen_named_decl_content(decl, content);
 		Visitor::gen_tag_decl_content(decl, content);
 		Visitor::gen_record_decl_content(decl, content);
@@ -378,7 +382,7 @@ bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) const noexcept
 	if (decl->isCompleteDefinition()) {
 		auto& content = m_tmpl_enums.emplace_back();
 
-		Visitor::gen_decl_content(decl, content);
+		this->gen_decl_content(decl, content);
 		Visitor::gen_named_decl_content(decl, content);
 		Visitor::gen_tag_decl_content(decl, content);
 
@@ -397,7 +401,7 @@ bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
 	if (decl->getAccess() == clang::AccessSpecifier::AS_none) {
 		auto& content = m_tmpl_funcs.emplace_back();
 
-		Visitor::gen_decl_content(decl, content);
+		this->gen_decl_content(decl, content);
 		Visitor::gen_named_decl_content(decl, content);
 
 		this->gen_func_decl_content(decl, content);

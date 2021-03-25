@@ -23,7 +23,7 @@ private:
 
 private:
 	void        gen_type_content(const clang::QualType& type, inja::json& content) const noexcept;
-	static void gen_decl_content(const clang::Decl* decl, inja::json& content) noexcept;
+	void        gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept;
 	static void gen_named_decl_content(const clang::NamedDecl* decl, inja::json& content) noexcept;
 	static void gen_tag_decl_content(const clang::TagDecl* decl, inja::json& content) noexcept;
 	static void gen_record_decl_content(const clang::RecordDecl* decl, inja::json& content) noexcept;

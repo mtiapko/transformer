@@ -124,17 +124,46 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 
 	content["integer_type"] = decl->getIntegerType().getAsString(m_printing_policy);
 
+	struct EnumeratorValue
+	{
+		const bool is_signed;
+		const int64_t data;
+
+		EnumeratorValue(const llvm::APSInt& value) noexcept
+			: is_signed(value.isSigned())
+			, data(value.getExtValue())
+		{}
+	};
+
+	std::map<EnumeratorValue, inja::json, decltype(
+		[](const auto& lhs, const auto& rhs)
+		{
+			assert(lhs.is_signed == rhs.is_signed);
+			return (lhs.is_signed
+				? (lhs.data < rhs.data)
+				: (static_cast<uint64_t>(lhs.data) < static_cast<uint64_t>(rhs.data)));
+		}
+	)> grouped_enumerators_map;
+
 	auto& enums = content["enumerators"];
 	for (const auto& decl_enumerator: decl->enumerators()) {
 		auto& e = enums.emplace_back();
 
-		e["name"] = decl_enumerator->getName();
+		const auto& enumerator_name = decl_enumerator->getName();
+		e["name"] = enumerator_name;
 
 		auto& e_value = e["value"];
-		int64_t val = decl_enumerator->getInitVal().getExtValue();
-		if (decl_enumerator->getInitVal().isSigned()) e_value = val;
-		else e_value = static_cast<uint64_t>(val);
+
+		EnumeratorValue value { decl_enumerator->getInitVal() };
+		if (value.is_signed) e_value = value.data;
+		else e_value = static_cast<uint64_t>(value.data);
+
+		grouped_enumerators_map[value].emplace_back(enumerator_name);
 	}
+
+	auto& grouped_enumerators = content["grouped_enumerators"];
+	for (const auto& [enumerators_value, enumerators]: grouped_enumerators_map)
+		grouped_enumerators.emplace_back(std::move(enumerators));
 }
 
 void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,

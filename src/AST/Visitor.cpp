@@ -67,6 +67,11 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) const noexcept
 {
 	SET_VALUE_OF(type, isConstQualified);
+	SET_VALUE_OF(type, isVolatileQualified);
+
+	// TODO(FiTH): check if this is too slow
+	const auto* ref_type = type->getAs<clang::ReferenceType>();
+	content["is_const_ref"] = (ref_type != nullptr && ref_type->getPointeeType().isConstQualified());
 
 	content["type"] = type.getAsString(m_printing_policy);
 }

@@ -27,6 +27,8 @@ public:
 
 int main(int argc, const char* argv[])
 {
+	// TODO(FiTH): accumulate many sources to avoid type info duplications of std type
+
 	// TODO(FiTH): https://llvm.org/docs/CommandLine.html
 
 	// setup parser (parse arguments)
@@ -49,6 +51,7 @@ int main(int argc, const char* argv[])
 	// generate output
 	auto env = inja::Environment {};
 	env.set_trim_blocks(true);
+	// env.set_lstrip_blocks(...);
 
 	// add custom callbacks
 	env.add_callback("valueOr", 2, [](inja::Arguments& args)

@@ -1,4 +1,5 @@
 #include <clang/Basic/SourceManager.h>
+#include <clang/AST/RecordLayout.h>
 #include <clang/Lex/Lexer.h>
 
 #include "transformer/AST/Visitor.h"
@@ -7,8 +8,10 @@
 
 namespace nlohmann {
 	template<>
-	struct adl_serializer<llvm::StringRef> {
-		static void to_json(json& j, const llvm::StringRef& str) {
+	struct adl_serializer<llvm::StringRef>
+	{
+		static void to_json(json& j, const llvm::StringRef& str)
+		{
 			if (str.empty())
 				j = nullptr;
 
@@ -150,9 +153,9 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 		}
 	)> grouped_enumerators_map;
 
-	auto& enums = content["enumerators"];
+	auto& enumerators_content = content["enumerators"];
 	for (const auto& decl_enumerator: decl->enumerators()) {
-		auto& e = enums.emplace_back();
+		auto& e = enumerators_content.emplace_back();
 
 		const auto& enumerator_name = decl_enumerator->getName();
 		e["name"] = enumerator_name;
@@ -342,6 +345,7 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	SET_VALUE(hasMutableFields);
 	SET_VALUE(hasVariantMembers);
 	SET_VALUE(allowConstDefaultInit);
+	// TODO(FiTH): SET_VALUE(hasConstFields)? gen content from clang::RecordDecl?
 
 	Visitor::gen_class_dflt_ctor_content  (decl, content["default_ctor"]);
 	Visitor::gen_class_copy_ctor_content  (decl, content["copy_ctor"   ]);
@@ -350,17 +354,40 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	Visitor::gen_class_move_assign_content(decl, content["move_assign" ]);
 	Visitor::gen_class_destructor_content (decl, content["destructor"  ]);
 
+	const auto& record_layout = m_context.getASTRecordLayout(decl);
+	content["alignment_in_chars"] = record_layout.getAlignment().getQuantity();
+	content["size_in_chars"     ] = record_layout.getSize().getQuantity();
+	content["data_size_in_chars"] = record_layout.getDataSize().getQuantity();
+
 	auto& bases_content = content["base_classes"];
-	for (const auto& base: decl->bases())
-		this->gen_class_base_full_content(base, bases_content.emplace_back());
+	for (const auto& base: decl->bases()) {
+		auto& b = bases_content.emplace_back();
+
+		const clang::CXXRecordDecl* base_decl = base.getType()->getAsCXXRecordDecl();
+		b["offset_in_chars"       ] = record_layout.getBaseClassOffset(base_decl).getQuantity(); // TODO(FiTH): getVBaseClassOffset?
+		b["vb_ptr_offset_in_chars"] = record_layout.getVBPtrOffset().getQuantity();
+		b["has_own_vf_ptr"        ] = record_layout.hasOwnVFPtr();
+		b["has_extendable_vf_ptr" ] = record_layout.hasExtendableVFPtr();
+		b["has_own_vb_ptr"        ] = record_layout.hasOwnVBPtr();
+		b["has_vb_ptr"            ] = record_layout.hasVBPtr();
+
+		this->gen_class_base_full_content(base, b);
+	}
 
 	auto& conv_funcs_content = content["conversion_functions"];
 	for (const auto& conv_func: decl->getVisibleConversionFunctions())
 		Visitor::gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
 
 	auto& fields_content = content["fields"];
-	for (const auto& field: decl->fields())
-		this->gen_class_field_full_content(field, fields_content.emplace_back());
+	for (const auto& field: decl->fields()) {
+		auto& f = fields_content.emplace_back();
+		f["offset_in_bits"] = record_layout.getFieldOffset(field->getFieldIndex());
+
+		// TODO(FiTH): add check and set to MAX if this is bit field
+		f["offset_in_chars"] = record_layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT;
+
+		this->gen_class_field_full_content(field, f);
+	}
 
 	auto& methods_content                    = content["methods"];
 	auto& constructors_content               = content["constructors"];
@@ -376,6 +403,8 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 
 		this->gen_class_method_full_content(method, content_ptr->emplace_back());
 	}
+
+	// TODO(FiTH): gen content for friends
 }
 
 Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noexcept

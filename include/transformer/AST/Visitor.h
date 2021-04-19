@@ -37,8 +37,11 @@ private:
 	static void gen_class_move_assign_content(const clang::CXXRecordDecl* decl, inja::json& content) noexcept;
 	static void gen_class_destructor_content(const clang::CXXRecordDecl* decl, inja::json& content) noexcept;
 
-	void        gen_class_base_full_content(const clang::CXXBaseSpecifier& base, inja::json& content) const noexcept;
-	void        gen_class_field_full_content(const clang::FieldDecl* decl, inja::json& content) const noexcept;
+	void        gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
+					clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content,
+					inja::json& fields_content) const noexcept;
+	void        gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
+					clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) const noexcept;
 	void        gen_class_method_full_content(const clang::CXXMethodDecl* decl, inja::json& content) const noexcept;
 
 	void        gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl, inja::json& content) const noexcept;

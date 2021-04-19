@@ -300,21 +300,51 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 		SET_VALUE(defaultedDestructorIsDeleted);
 }
 
-void Visitor::gen_class_base_full_content(const clang::CXXBaseSpecifier& base,
-	inja::json& content) const noexcept
+void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
+	clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content, inja::json& fields_content) const noexcept
 {
-	SET_VALUE_OF(base, isVirtual);
-	SET_VALUE_OF(base, getInheritConstructors);
+	for (const auto& base: decl->bases()) {
+		const auto* base_decl   = base.getType()->getAsCXXRecordDecl();
+		const auto& base_layout = m_context.getASTRecordLayout(base_decl);
 
-	content["name"] = base.getType().getAsString(m_printing_policy);
-	content["access_specifier"] = clang::getAccessSpelling(base.getAccessSpecifier());
+		// TODO(FiTH): getVBaseClassOffset?
+		auto base_offset_in_chars = layout.getBaseClassOffset(base_decl).getQuantity() + offset_in_chars;
+
+		this->gen_class_all_bases_full_content(base_decl, base_layout, offset_in_chars, bases_content, fields_content);
+
+		auto& content = bases_content.emplace_back();
+		content["offset_in_chars"       ] = base_offset_in_chars;
+		content["vb_ptr_offset_in_chars"] = layout.getVBPtrOffset().getQuantity();
+		content["has_own_vf_ptr"        ] = layout.hasOwnVFPtr();
+		content["has_extendable_vf_ptr" ] = layout.hasExtendableVFPtr();
+		content["has_own_vb_ptr"        ] = layout.hasOwnVBPtr();
+		content["has_vb_ptr"            ] = layout.hasVBPtr();
+
+		SET_VALUE_OF(base, isVirtual);
+		SET_VALUE_OF(base, getInheritConstructors);
+
+		content["name"] = base.getType().getAsString(m_printing_policy);
+		content["access_specifier"] = clang::getAccessSpelling(base.getAccessSpecifier());
+
+		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
+	}
 }
 
-void Visitor::gen_class_field_full_content(const clang::FieldDecl* decl,
-	inja::json& content) const noexcept
+void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
+	clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) const noexcept
 {
-	Visitor::gen_named_decl_content(decl, content);
-	this->gen_type_content(decl->getType(), content);
+	const auto base_offset_in_bits = base_offset_in_chars * CHAR_BIT;
+
+	for (const auto& field: decl->fields()) {
+		auto& content = fields_content.emplace_back();
+		content["offset_in_bits"] = layout.getFieldOffset(field->getFieldIndex()) + base_offset_in_bits;
+
+		// TODO(FiTH): add check and set to MAX if this is bit field
+		content["offset_in_chars"] = layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT + base_offset_in_chars;
+
+		Visitor::gen_named_decl_content(field, content);
+		this->gen_type_content(field->getType(), content);
+	}
 }
 
 void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
@@ -360,34 +390,10 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	content["data_size_in_chars"] = record_layout.getDataSize().getQuantity();
 
 	auto& bases_content = content["base_classes"];
-	for (const auto& base: decl->bases()) {
-		auto& b = bases_content.emplace_back();
-
-		const clang::CXXRecordDecl* base_decl = base.getType()->getAsCXXRecordDecl();
-		b["offset_in_chars"       ] = record_layout.getBaseClassOffset(base_decl).getQuantity(); // TODO(FiTH): getVBaseClassOffset?
-		b["vb_ptr_offset_in_chars"] = record_layout.getVBPtrOffset().getQuantity();
-		b["has_own_vf_ptr"        ] = record_layout.hasOwnVFPtr();
-		b["has_extendable_vf_ptr" ] = record_layout.hasExtendableVFPtr();
-		b["has_own_vb_ptr"        ] = record_layout.hasOwnVBPtr();
-		b["has_vb_ptr"            ] = record_layout.hasVBPtr();
-
-		this->gen_class_base_full_content(base, b);
-	}
-
-	auto& conv_funcs_content = content["conversion_functions"];
-	for (const auto& conv_func: decl->getVisibleConversionFunctions())
-		Visitor::gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
-
 	auto& fields_content = content["fields"];
-	for (const auto& field: decl->fields()) {
-		auto& f = fields_content.emplace_back();
-		f["offset_in_bits"] = record_layout.getFieldOffset(field->getFieldIndex());
 
-		// TODO(FiTH): add check and set to MAX if this is bit field
-		f["offset_in_chars"] = record_layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT;
-
-		this->gen_class_field_full_content(field, f);
-	}
+	this->gen_class_all_bases_full_content(decl, record_layout, /* offset of first base */ 0, bases_content, fields_content);
+	this->gen_class_all_fields_full_content(decl, record_layout, /* offset of first field */ 0, fields_content);
 
 	auto& methods_content                    = content["methods"];
 	auto& constructors_content               = content["constructors"];
@@ -403,6 +409,10 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 
 		this->gen_class_method_full_content(method, content_ptr->emplace_back());
 	}
+
+	auto& conv_funcs_content = content["conversion_functions"];
+	for (const auto& conv_func: decl->getVisibleConversionFunctions())
+		Visitor::gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
 
 	// TODO(FiTH): gen content for friends
 }

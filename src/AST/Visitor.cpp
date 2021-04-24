@@ -353,6 +353,10 @@ void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
 	this->gen_decl_content(decl, content);
 	Visitor::gen_named_decl_content(decl, content);
 	this->gen_func_decl_content(decl, content);
+
+	SET_VALUE(isStatic);
+	SET_VALUE(isConst);
+	SET_VALUE(isVirtual);
 }
 
 void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,

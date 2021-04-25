@@ -73,8 +73,27 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 	SET_VALUE_OF(type, isVolatileQualified);
 
 	// TODO(FiTH): check if this is too slow
+
+	static constexpr const char* pointee_content_name = "pointee_type";
+
 	const auto* ref_type = type->getAs<clang::ReferenceType>();
-	content["is_const_ref"] = (ref_type != nullptr && ref_type->getPointeeType().isConstQualified());
+	content["is_reference"      ] = (ref_type != nullptr);
+	content["is_const_reference"] = (ref_type != nullptr && ref_type->getPointeeType().isConstQualified());
+	if (ref_type != nullptr)
+		this->gen_type_content(ref_type->getPointeeType(), content[pointee_content_name]);
+
+	const auto* ptr_type = type->getAs<clang::PointerType>();
+	content["is_pointer"      ] = (ptr_type != nullptr);
+	content["is_const_pointer"] = (ptr_type != nullptr && ptr_type->getPointeeType().isConstQualified());
+	if (ptr_type != nullptr) // TODO(FiTH): assert(ref_type == nullptr)
+		this->gen_type_content(ptr_type->getPointeeType(), content[pointee_content_name]);
+
+	const auto* arr_type = m_context.getAsConstantArrayType(type);
+	content["is_array"] = (arr_type != nullptr);
+	if (arr_type != nullptr) { // TODO(FiTH): assert(ref_type == nullptr && ptr_type == nullptr)
+		content["array_size"] = arr_type->getSize().getZExtValue();
+		this->gen_type_content(arr_type->getElementType(), content[pointee_content_name]);
+	}
 
 	content["type"] = type.getAsString(m_printing_policy);
 }

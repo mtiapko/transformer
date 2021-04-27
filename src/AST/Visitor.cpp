@@ -130,7 +130,7 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 	for (const auto& attr: decl->attrs()) {
 		if (attr->getKind() == clang::attr::Kind::Annotate) {
 			const auto& annotation = static_cast<clang::AnnotateAttr*>(attr)->getAnnotation();
-			annotation_attribute_content = annotation;
+			annotation_attribute_content += annotation;
 		}
 	}
 }

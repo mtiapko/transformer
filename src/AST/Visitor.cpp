@@ -125,6 +125,14 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 
 	const auto& src_mgr = m_context.getSourceManager();
 	content["filename"] = src_mgr.getFilename(decl->getLocation());
+
+	auto& annotation_attribute_content = content["annotation_attribute"];
+	for (const auto& attr: decl->attrs()) {
+		if (attr->getKind() == clang::attr::Kind::Annotate) {
+			const auto& annotation = static_cast<clang::AnnotateAttr*>(attr)->getAnnotation();
+			annotation_attribute_content = annotation;
+		}
+	}
 }
 
 /* static */ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,

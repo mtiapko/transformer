@@ -18,8 +18,12 @@ private:
 	inja::json& m_tmpl_enums;
 	inja::json& m_tmpl_funcs;
 
+private: // TODO(FiTH): get this from command line
+	std::string m_rtti_attributes_namespace = "rtti::";
+
 private:
 	bool is_from_main_file(const clang::Decl* decl) const noexcept;
+	std::vector<std::string> split_annotate_attributes(const inja::json& annotate_attr, inja::json& content) const noexcept;
 
 private:
 	void        gen_type_content(const clang::QualType& type, inja::json& content) const noexcept;

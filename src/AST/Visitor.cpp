@@ -62,6 +62,94 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
 }
 
+std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& annotate_attr,
+	inja::json& content) const noexcept
+{
+	const auto find_char = [](const std::string& str, size_t beg_index, const char c) noexcept
+	{
+		union
+		{
+			struct
+			{
+				uint32_t l_bracket_count: 8; // [
+				uint32_t l_brace_count  : 8; // {
+				uint32_t l_paren_count  : 8; // (
+				uint32_t double_quote   : 1; // "
+				uint32_t single_quote   : 1; // '
+			} data;
+
+			uint32_t total_count = 0;
+		} chars_state {};
+
+		static_assert(sizeof(chars_state) == sizeof(chars_state.total_count));
+
+		// TODO(FiTH): add assert if curr == '\0' but total_count != 0?
+		// TODO(FiTH): add assert if count < 0?
+		// TODO(FiTH): handle \" \' cases?
+
+		// NOTE(FiTH): std::string is always null-terminated (str[str.size()] == CharT())
+		for (size_t i = beg_index; i <= str.size(); ++i) {
+			const char curr = str[i];
+
+			if ((curr == c && chars_state.total_count == 0) || (curr == '\0'))
+				return i;
+
+			if      (chars_state.data.single_quote == 0) { if (curr == '"' ) chars_state.data.double_quote ^= 1; } // invert
+			else if (chars_state.data.double_quote == 0) { if (curr == '\'') chars_state.data.single_quote ^= 1; } // invert
+			else if (curr == '[') ++chars_state.data.l_bracket_count;
+			else if (curr == ']') --chars_state.data.l_bracket_count;
+			else if (curr == '{') ++chars_state.data.l_brace_count;
+			else if (curr == '}') --chars_state.data.l_brace_count;
+			else if (curr == '(') ++chars_state.data.l_paren_count;
+			else if (curr == ')') --chars_state.data.l_paren_count;
+		}
+
+		return str.size();
+	};
+
+	const auto skip_whitespaces = [](const std::string& str, size_t beg_index, size_t end_index) noexcept
+	{
+		const auto is_whitespace = [](const char c) noexcept
+		{ return (c == ' ' || c == '\t' || c == '\n'); };
+
+		while (is_whitespace(str[beg_index])) // '\0' is not a whitespace
+			++beg_index;
+
+		while (beg_index > end_index && is_whitespace(str[end_index]))
+			--end_index;
+
+		return std::pair { beg_index, end_index };
+	};
+
+	std::vector<std::string> attr_list {};
+	for (const auto& attr: annotate_attr) {
+		const auto& attr_str = attr.get_ref<const std::string&>();
+
+		for (size_t beg = 0, end = 0; beg < attr_str.size(); beg = end + 1 /* skip ',' */) {
+			end = find_char(attr_str, beg, ',');
+
+			const auto [attr_beg, attr_end] = skip_whitespaces(attr_str, beg, end - 1 /* skip ',' or '\0' */);
+			if (attr_str[attr_beg] == ',') // case with ", ," or even ",,"
+				continue;
+
+			// TODO(FiTH): add assert attr_beg >= attr_end
+			assert(attr_beg <= attr_end);
+
+			// attr_beg can be equal to attr_end! using +1 for size
+			const auto parsed_attr = std::string_view { attr_str.data() + attr_beg, attr_end - attr_beg + 1 };
+			if (parsed_attr.starts_with(m_rtti_attributes_namespace)) {
+				// TODO(FiTH): add assert that 'parsed_attr' does not contain '=', '(' etc.
+				content[parsed_attr.data() + m_rtti_attributes_namespace.size()] = true;
+				continue;
+			}
+
+			attr_list.emplace_back(parsed_attr);
+		}
+	}
+
+	return attr_list;
+}
+
 #define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
 #define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
@@ -126,13 +214,16 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 	const auto& src_mgr = m_context.getSourceManager();
 	content["filename"] = src_mgr.getFilename(decl->getLocation());
 
-	auto& annotation_attribute_content = content["annotation_attribute"];
+	auto& annotate_attributes_content = content["annotate_attributes"];
 	for (const auto& attr: decl->attrs()) {
 		if (attr->getKind() == clang::attr::Kind::Annotate) {
-			const auto& annotation = static_cast<clang::AnnotateAttr*>(attr)->getAnnotation();
-			annotation_attribute_content += annotation;
+			const auto& annotate = static_cast<clang::AnnotateAttr*>(attr)->getAnnotation();
+			annotate_attributes_content += annotate;
 		}
 	}
+
+	content["annotate_attributes_list"]
+		= Visitor::split_annotate_attributes(annotate_attributes_content, content["rtti_attributes"]);
 }
 
 /* static */ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,

@@ -157,7 +157,7 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
 #define SET_VALUE_WITH_NAME(value, name)    SET_VALUE_OF_PTR(name, decl, value)
 
-void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) const noexcept
+void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) noexcept
 {
 	SET_VALUE_OF(type, isConstQualified);
 	SET_VALUE_OF(type, isVolatileQualified);
@@ -200,7 +200,11 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 		}
 	}
 
-	content["type"] = type.getAsString(m_printing_policy);
+	auto& type_content = content["type"];
+	type_content = type.getAsString(m_printing_policy);
+
+	if (type->isBuiltinType() == false)
+		m_used_types.emplace(type_content.get_ref<const std::string&>());
 }
 
 void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept
@@ -228,19 +232,23 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 		= Visitor::split_annotate_attributes(annotate_attributes_content, content["rtti_attributes"]);
 }
 
-/* static */ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
-	inja::json& content) noexcept
+void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
+	inja::json& content, bool is_type_decl /* = false */) noexcept
 {
-	auto& content_name = content["name"];
+	auto& name_content = content["name"];
 	const auto* decl_identifier = decl->getIdentifier();
 	if (decl_identifier != nullptr)
-		content_name = decl_identifier->getName();
+		name_content = decl_identifier->getName();
 	else if (const auto& name = decl->getNameAsString(); name.empty() == false)
-		content_name = name;
+		name_content = name;
 
-	auto& content_full_name = content["full_name"];
-	if (const auto& full_name = decl->getQualifiedNameAsString(); full_name.empty() == false)
-		content_full_name = full_name;
+	auto& full_name_content = content["full_name"];
+	if (const auto& full_name = decl->getQualifiedNameAsString(); full_name.empty() == false) {
+		full_name_content = full_name;
+
+		if (is_type_decl)
+			m_defined_types.emplace_back(full_name);
+	}
 }
 
 /* static */ void Visitor::gen_tag_decl_content(const clang::TagDecl* decl,
@@ -301,7 +309,7 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 }
 
 void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
-	inja::json& content) const noexcept
+	inja::json& content) noexcept
 {
 	SET_VALUE(isVariadic);
 	SET_VALUE(isVirtualAsWritten);
@@ -330,7 +338,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 		auto& param = parameters.emplace_back();
 
 		this->gen_type_content(decl_parameter->getType(), param);
-		Visitor::gen_named_decl_content(decl_parameter, param);
+		this->gen_named_decl_content(decl_parameter, param);
 
 		const bool hasDefaultArg = decl_parameter->hasDefaultArg();
 		param["has_default_arg"] = hasDefaultArg;
@@ -427,7 +435,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 }
 
 void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
-	clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content, inja::json& fields_content) const noexcept
+	clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content, inja::json& fields_content) noexcept
 {
 	for (const auto& base: decl->bases()) {
 		const auto* base_decl   = base.getType()->getAsCXXRecordDecl();
@@ -457,7 +465,7 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 }
 
 void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
-	clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) const noexcept
+	clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) noexcept
 {
 	const auto base_offset_in_bits = base_offset_in_chars * CHAR_BIT;
 
@@ -468,16 +476,16 @@ void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl
 		// TODO(FiTH): add check and set to MAX if this is bit field
 		content["offset_in_chars"] = layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT + base_offset_in_chars;
 
-		Visitor::gen_named_decl_content(field, content);
+		this->gen_named_decl_content(field, content);
 		this->gen_type_content(field->getType(), content);
 	}
 }
 
 void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
-	inja::json& content) const noexcept
+	inja::json& content) noexcept
 {
 	this->gen_decl_content(decl, content);
-	Visitor::gen_named_decl_content(decl, content);
+	this->gen_named_decl_content(decl, content);
 	this->gen_func_decl_content(decl, content);
 
 	SET_VALUE(isStatic);
@@ -486,7 +494,7 @@ void Visitor::gen_class_method_full_content(const clang::CXXMethodDecl* decl,
 }
 
 void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
-	inja::json& content) const noexcept
+	inja::json& content) noexcept
 {
 	SET_VALUE(isEmpty);
 	SET_VALUE(isAggregate);
@@ -542,7 +550,7 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 
 	auto& conv_funcs_content = content["conversion_functions"];
 	for (const auto& conv_func: decl->getVisibleConversionFunctions())
-		Visitor::gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
+		this->gen_named_decl_content(conv_func, conv_funcs_content.emplace_back());
 
 	// TODO(FiTH): gen content for friends
 }
@@ -557,7 +565,7 @@ Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noe
 	, m_tmpl_funcs  (tmpl_content["functions"])
 {}
 
-bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcept
+bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 {
 	if (this->is_from_main_file(decl) == false)
 		return true;
@@ -567,7 +575,7 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcep
 		auto& content = m_tmpl_classes.emplace_back();
 
 		this->gen_decl_content(decl, content);
-		Visitor::gen_named_decl_content(decl, content);
+		this->gen_named_decl_content(decl, content, /* is_type_decl */ true);
 		Visitor::gen_tag_decl_content(decl, content);
 		Visitor::gen_record_decl_content(decl, content);
 
@@ -577,7 +585,7 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const noexcep
 	return true;
 }
 
-bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) const noexcept
+bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) noexcept
 {
 	if (this->is_from_main_file(decl) == false)
 		return true;
@@ -586,7 +594,7 @@ bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) const noexcept
 		auto& content = m_tmpl_enums.emplace_back();
 
 		this->gen_decl_content(decl, content);
-		Visitor::gen_named_decl_content(decl, content);
+		this->gen_named_decl_content(decl, content, /* is_type_decl */ true);
 		Visitor::gen_tag_decl_content(decl, content);
 
 		this->gen_enum_decl_content(decl, content);
@@ -595,7 +603,7 @@ bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) const noexcept
 	return true;
 }
 
-bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
+bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) noexcept
 {
 	if (this->is_from_main_file(decl) == false)
 		return true;
@@ -605,12 +613,22 @@ bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) const noexcept
 		auto& content = m_tmpl_funcs.emplace_back();
 
 		this->gen_decl_content(decl, content);
-		Visitor::gen_named_decl_content(decl, content);
+		this->gen_named_decl_content(decl, content);
 
 		this->gen_func_decl_content(decl, content);
 	}
 
 	return true;
+}
+
+void Visitor::post_visit() noexcept
+{
+	for (const auto& type: m_defined_types)
+		m_used_types.erase(type);
+
+	auto& used_types_content = m_tmpl_content["used_types"];
+	for (const auto& type: m_used_types)
+		used_types_content += type;
 }
 
 #undef SET_VALUE_WITH_NAME

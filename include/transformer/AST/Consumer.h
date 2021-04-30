@@ -24,6 +24,7 @@ private:
 	{
 		Visitor ast_visitor { context, m_tmpl_content };
 		ast_visitor.TraverseDecl(context.getTranslationUnitDecl());
+		ast_visitor.post_visit();
 	}
 };
 

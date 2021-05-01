@@ -555,6 +555,11 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	// TODO(FiTH): gen content for friends
 }
 
+#undef SET_VALUE_WITH_NAME
+#undef SET_VALUE
+#undef SET_VALUE_OF
+#undef SET_VALUE_OF_PTR
+
 Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noexcept
 	: m_context(context)
 	, m_printing_policy(context.getPrintingPolicy())
@@ -630,10 +635,5 @@ void Visitor::post_visit() noexcept
 	for (const auto& type: m_used_types)
 		used_types_content += type;
 }
-
-#undef SET_VALUE_WITH_NAME
-#undef SET_VALUE
-#undef SET_VALUE_OF
-#undef SET_VALUE_OF_PTR
 
 }

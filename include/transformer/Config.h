@@ -24,13 +24,15 @@ constexpr auto& operator"" _fmt_arg()
 	return Str;
 }
 
-#define CMD_LINE_ARG(arg, arg_desc, ...) \
-	static inline llvm::cl::opt<std::string> arg##_opt { \
+#define CMD_LINE_ARG(type, arg, arg_desc, ...) \
+	static inline llvm::cl::opt<type> arg##_opt { \
 		#arg##_fmt_arg.data, \
 		llvm::cl::desc(arg_desc), \
 		llvm::cl::cat(options_category) \
 		__VA_OPT__(,) __VA_ARGS__\
 	}
+
+#define CMD_LINE_STR_ARG(arg, arg_desc, ...) CMD_LINE_ARG(std::string, arg, arg_desc __VA_OPT__(,) __VA_ARGS__)
 
 #define CMD_LINE_ARG_ALIAS(arg, arg_alias) \
 	static inline llvm::cl::alias arg##_short_opt { \
@@ -39,8 +41,8 @@ constexpr auto& operator"" _fmt_arg()
 		llvm::cl::aliasopt(arg##_opt) \
 	}
 
-#define CMD_LINE_ARG_WITH_ALIAS(arg, arg_alias, arg_desc, ...) \
-	CMD_LINE_ARG(arg, arg_desc __VA_OPT__(,) __VA_ARGS__); \
+#define CMD_LINE_STR_ARG_WITH_ALIAS(arg, arg_alias, arg_desc, ...) \
+	CMD_LINE_STR_ARG(arg, arg_desc __VA_OPT__(,) __VA_ARGS__); \
 	CMD_LINE_ARG_ALIAS(arg, arg_alias)
 
 class Config
@@ -49,9 +51,10 @@ public:
 	static inline llvm::cl::OptionCategory options_category { "Transformer options" };
 
 public:
-	CMD_LINE_ARG_WITH_ALIAS(tmpl_file_path,   "t", "Template file path", llvm::cl::Required);
-	CMD_LINE_ARG_WITH_ALIAS(src_file_path,    "s", "Source file path"); // TODO(FiTH): opt_parser->getCompilations()
-	CMD_LINE_ARG_WITH_ALIAS(output_file_path, "o", "Output file path");
+	CMD_LINE_STR_ARG_WITH_ALIAS(tmpl_file_path,           "t", "Template file path", llvm::cl::Required);
+	CMD_LINE_STR_ARG_WITH_ALIAS(src_file_path,            "s", "Source file path"); // TODO(FiTH): opt_parser->getCompilations()
+	CMD_LINE_STR_ARG_WITH_ALIAS(output_file_path,         "o", "Output file path");
+	CMD_LINE_ARG(bool,          gen_content_for_includes,      "Generate content for included files? (disabled by default)");
 };
 
 }

@@ -5,6 +5,7 @@
 #include <clang/Lex/Lexer.h>
 
 #include "transformer/AST/Visitor.h"
+#include "transformer/Config.h"
 
 // TODO(FiTH): check 'llvm::StringRef' to 'json' conversion
 
@@ -62,6 +63,13 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 {
 	const auto& src_mgr = m_context.getSourceManager();
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
+}
+
+bool Visitor::does_decl_require_content_gen(const clang::Decl* decl) const noexcept
+{
+	// TODO(FiTH): check this? - decl->isDefinedOutsideFunctionOrMethod()
+
+	return (Config::gen_content_for_includes_opt || this->is_from_main_file(decl));
 }
 
 std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& annotate_attr,
@@ -572,11 +580,13 @@ Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noe
 
 bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 {
-	if (this->is_from_main_file(decl) == false)
-		return true;
-
 	// NOTE(FiTH): decl->isAnonymousStructOrUnion() does not work for some reason
-	if (decl->isCompleteDefinition() && decl->getIdentifier() != nullptr) {
+
+	if (
+		decl->isCompleteDefinition() &&
+		decl->getIdentifier() != nullptr &&
+		this->does_decl_require_content_gen(decl)
+	) {
 		auto& content = m_tmpl_classes.emplace_back();
 
 		this->gen_decl_content(decl, content);
@@ -592,10 +602,7 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 
 bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) noexcept
 {
-	if (this->is_from_main_file(decl) == false)
-		return true;
-
-	if (decl->isCompleteDefinition()) {
+	if (decl->isCompleteDefinition() && this->does_decl_require_content_gen(decl)) {
 		auto& content = m_tmpl_enums.emplace_back();
 
 		this->gen_decl_content(decl, content);
@@ -610,11 +617,8 @@ bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) noexcept
 
 bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) noexcept
 {
-	if (this->is_from_main_file(decl) == false)
-		return true;
-
 	// visit only non-member functions
-	if (decl->getAccess() == clang::AccessSpecifier::AS_none) {
+	if (this->does_decl_require_content_gen(decl) && decl->getAccess() == clang::AccessSpecifier::AS_none) {
 		auto& content = m_tmpl_funcs.emplace_back();
 
 		this->gen_decl_content(decl, content);

@@ -29,6 +29,7 @@ private: // TODO(FiTH): get this from command line
 
 private:
 	bool is_from_main_file(const clang::Decl* decl) const noexcept;
+	bool does_decl_require_content_gen(const clang::Decl* decl) const noexcept;
 	std::vector<std::string> split_annotate_attributes(const inja::json& annotate_attr, inja::json& content) const noexcept;
 
 private:

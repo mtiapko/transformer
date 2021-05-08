@@ -8,7 +8,8 @@ Currently supported features:
 - generate output using **[Jinja](https://palletsprojects.com/p/jinja/)**-like template
 - [C++ custom attributes](https://en.cppreference.com/w/cpp/language/attributes) support
 
-# Table of contents (TODO)
+# WARNING! WIP!
+After switching from `libclang` to `libtooling`, some of the information in this `README` file is **OUTDATED**. At the moment `transformer` is a fully working tool, but some command line interfaces have changed a little, and also names of some template variables have changed. I will try to update this manual in the near future.
 
 # Usage example
 Let's imagine that we have some files:

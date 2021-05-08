@@ -142,7 +142,7 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 			if (attr_str[attr_beg] == ',') // case with ", ," or even ",,"
 				continue;
 
-			// TODO(FiTH): add assert attr_beg >= attr_end
+			// TODO(FiTH): add assert attr_beg <= attr_end
 			assert(attr_beg <= attr_end);
 
 			// attr_beg can be equal to attr_end! using +1 for size

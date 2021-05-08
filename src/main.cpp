@@ -29,8 +29,6 @@ int main(int argc, const char* argv[])
 {
 	// TODO(FiTH): accumulate many sources to avoid type info duplications of std type
 
-	// TODO(FiTH): https://llvm.org/docs/CommandLine.html
-
 	// setup parser (parse arguments)
 	auto opt_parser = clang::tooling::CommonOptionsParser::create(argc, argv,
 		transformer::Config::options_category, llvm::cl::NumOccurrencesFlag::ZeroOrMore);

@@ -37,7 +37,7 @@ constexpr auto& operator"" _fmt_arg()
 #define CMD_LINE_ARG_ALIAS(arg, arg_alias) \
 	static inline llvm::cl::alias arg##_short_opt { \
 		arg_alias, \
-		llvm:: cl::desc("Alias for --" #arg##_fmt_arg.data), \
+		llvm::cl::desc("Alias for --" #arg##_fmt_arg.data), \
 		llvm::cl::aliasopt(arg##_opt) \
 	}
 
@@ -50,10 +50,11 @@ class Config
 public:
 	static inline llvm::cl::OptionCategory options_category { "Transformer options" };
 
+// NOTE(FiTH): https://llvm.org/docs/CommandLine.html
 public:
-	CMD_LINE_STR_ARG_WITH_ALIAS(tmpl_file_path,           "t", "Template file path", llvm::cl::Required);
-	CMD_LINE_STR_ARG_WITH_ALIAS(src_file_path,            "s", "Source file path"); // TODO(FiTH): opt_parser->getCompilations()
-	CMD_LINE_STR_ARG_WITH_ALIAS(output_file_path,         "o", "Output file path");
+	CMD_LINE_STR_ARG_WITH_ALIAS(tmpl_file_path,           "t", "Template file path", llvm::cl::value_desc("file path"), llvm::cl::Required);
+	CMD_LINE_STR_ARG_WITH_ALIAS(src_file_path,            "s", "Source file path",   llvm::cl::value_desc("file path")); // TODO(FiTH): opt_parser->getCompilations()
+	CMD_LINE_STR_ARG_WITH_ALIAS(output_file_path,         "o", "Output file path",   llvm::cl::value_desc("file path"));
 	CMD_LINE_ARG(bool,          gen_content_for_includes,      "Generate content for included files? (disabled by default)");
 };
 

@@ -165,7 +165,8 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
 #define SET_VALUE_WITH_NAME(value, name)    SET_VALUE_OF_PTR(name, decl, value)
 
-void Visitor::gen_type_content(const clang::QualType& type, inja::json& content) noexcept
+// NOTE(FiTH): 'is_type_used' is true only for types of fields (required only for serialization?)
+void Visitor::gen_type_content(const clang::QualType& type, inja::json& content, bool is_type_used /* = false */) noexcept
 {
 	SET_VALUE_OF(type, isConstQualified);
 	SET_VALUE_OF(type, isVolatileQualified);
@@ -183,7 +184,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 		content["is_const_reference"    ] = is_const_reference;
 		content["is_non_const_reference"] = (ref_type != nullptr && !is_const_reference);
 		if (ref_type != nullptr)
-			this->gen_type_content(ref_type->getPointeeType(), content[pointee_content_name]);
+			this->gen_type_content(ref_type->getPointeeType(), content[pointee_content_name], is_type_used);
 	}
 
 	// ptr info
@@ -195,7 +196,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 		content["is_const_pointer"    ] = is_const_pointer;
 		content["is_non_const_pointer"] = (ptr_type != nullptr && !is_const_pointer);
 		if (ptr_type != nullptr) // TODO(FiTH): assert(ref_type == nullptr)
-			this->gen_type_content(ptr_type->getPointeeType(), content[pointee_content_name]);
+			this->gen_type_content(ptr_type->getPointeeType(), content[pointee_content_name], is_type_used);
 	}
 
 	// arr info
@@ -204,14 +205,14 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content)
 		content["is_array"] = (arr_type != nullptr);
 		if (arr_type != nullptr) { // TODO(FiTH): assert(ref_type == nullptr && ptr_type == nullptr)
 			content["array_size"] = arr_type->getSize().getZExtValue();
-			this->gen_type_content(arr_type->getElementType(), content[pointee_content_name]);
+			this->gen_type_content(arr_type->getElementType(), content[pointee_content_name], is_type_used);
 		}
 	}
 
 	auto& type_content = content["type"];
 	type_content = type.getAsString(m_printing_policy);
 
-	if (type->isBuiltinType() == false)
+	if (is_type_used && type->isBuiltinType() == false)
 		m_used_types.emplace(type_content.get_ref<const std::string&>());
 }
 
@@ -469,6 +470,7 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		content["access_specifier"] = clang::getAccessSpelling(base.getAccessSpecifier());
 
 		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
+		// TODO(FiTH): also gen content for all inherited methods?
 	}
 }
 
@@ -485,7 +487,7 @@ void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl
 		content["offset_in_chars"] = layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT + base_offset_in_chars;
 
 		this->gen_named_decl_content(field, content);
-		this->gen_type_content(field->getType(), content);
+		this->gen_type_content(field->getType(), content, /* is_type_used */ true);
 	}
 }
 

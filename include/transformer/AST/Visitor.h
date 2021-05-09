@@ -33,7 +33,7 @@ private:
 	std::vector<std::string> split_annotate_attributes(const inja::json& annotate_attr, inja::json& content) const noexcept;
 
 private:
-	void        gen_type_content(const clang::QualType& type, inja::json& content) noexcept;
+	void        gen_type_content(const clang::QualType& type, inja::json& content, bool is_used_type = false) noexcept;
 	void        gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept;
 	void        gen_named_decl_content(const clang::NamedDecl* decl, inja::json& content, bool is_type_decl = false) noexcept;
 	static void gen_tag_decl_content(const clang::TagDecl* decl, inja::json& content) noexcept;

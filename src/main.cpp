@@ -46,6 +46,12 @@ int main(int argc, const char* argv[])
 	if (ret != EXIT_SUCCESS)
 		return ret;
 
+	// dump generated content
+	if (transformer::Config::dump_generated_content_opt) {
+		std::cout << std::setw(2) << tmpl_content << '\n';
+		return EXIT_SUCCESS;
+	}
+
 	// generate output
 	auto env = inja::Environment {};
 	env.set_trim_blocks(true);

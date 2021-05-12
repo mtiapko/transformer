@@ -1,5 +1,5 @@
-#ifndef __TRANSFORMER_RTTI_STRING_VIEW_H__
-#define __TRANSFORMER_RTTI_STRING_VIEW_H__
+#ifndef __TRANSFORMER_RTTI_STDLIB_STRING_VIEW_H__
+#define __TRANSFORMER_RTTI_STDLIB_STRING_VIEW_H__
 
 #include "transformer-rtti/Config.h"
 
@@ -12,4 +12,4 @@ using StringView = std::string_view;
 
 }
 
-#endif // !__TRANSFORMER_RTTI_STRING_VIEW_H__
+#endif // !__TRANSFORMER_RTTI_STDLIB_STRING_VIEW_H__

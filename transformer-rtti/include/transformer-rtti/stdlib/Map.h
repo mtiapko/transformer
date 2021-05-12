@@ -1,5 +1,5 @@
-#ifndef __TRANSFORMER_RTTI_MAP_H__
-#define __TRANSFORMER_RTTI_MAP_H__
+#ifndef __TRANSFORMER_RTTI_STDLIB_MAP_H__
+#define __TRANSFORMER_RTTI_STDLIB_MAP_H__
 
 #include "transformer-rtti/Config.h"
 
@@ -13,4 +13,4 @@ using Map = std::map<KeyT, ValueT>;
 
 }
 
-#endif // !__TRANSFORMER_RTTI_MAP_H__
+#endif // !__TRANSFORMER_RTTI_STDLIB_MAP_H__

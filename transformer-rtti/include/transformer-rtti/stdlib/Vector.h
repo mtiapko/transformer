@@ -1,5 +1,5 @@
-#ifndef __TRANSFORMER_RTTI_VECTOR_H__
-#define __TRANSFORMER_RTTI_VECTOR_H__
+#ifndef __TRANSFORMER_RTTI_STDLIB_VECTOR_H__
+#define __TRANSFORMER_RTTI_STDLIB_VECTOR_H__
 
 #include "transformer-rtti/Config.h"
 
@@ -13,4 +13,4 @@ using Vector = std::vector<T>;
 
 }
 
-#endif // !__TRANSFORMER_RTTI_VECTOR_H__
+#endif // !__TRANSFORMER_RTTI_STDLIB_VECTOR_H__

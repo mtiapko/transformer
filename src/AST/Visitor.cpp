@@ -171,6 +171,10 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	SET_VALUE_OF(type, isConstQualified);
 	SET_VALUE_OF(type, isVolatileQualified);
 
+	content["is_builtin" ] = type->isBuiltinType();
+	content["is_record"  ] = type->isRecordType();
+	content["is_enumeral"] = type->isEnumeralType();
+
 	// TODO(FiTH): check if this is too slow
 
 	static constexpr const char* pointee_content_name = "pointee_type";
@@ -212,7 +216,8 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	auto& type_content = content["type"];
 	type_content = type.getAsString(m_printing_policy);
 
-	if (is_type_used && type->isBuiltinType() == false)
+	// TODO(FiTH): && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)
+	if (is_type_used)
 		m_used_types.emplace(type_content.get_ref<const std::string&>());
 }
 
@@ -260,6 +265,7 @@ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
 	}
 }
 
+// TODO(FiTH): not call for enums?
 /* static */ void Visitor::gen_tag_decl_content(const clang::TagDecl* decl,
 	inja::json& content) noexcept
 {

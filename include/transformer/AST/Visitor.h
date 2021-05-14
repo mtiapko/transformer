@@ -21,7 +21,7 @@ private:
 	inja::json& m_tmpl_funcs;
 
 	// TODO(FiTH): is it possible to define types with the same name in one file (not templates)?
-	std::set<std::string>    m_used_types;
+	inja::json::object_t     m_used_types;
 	std::vector<std::string> m_defined_types;
 
 private: // TODO(FiTH): get this from command line

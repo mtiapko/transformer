@@ -57,6 +57,10 @@ public:
 	CMD_LINE_STR_ARG_WITH_ALIAS(output_file_path,         "o", "Output file path",   llvm::cl::value_desc("file path"));
 	CMD_LINE_ARG(bool,          gen_content_for_includes,      "Generate content for included files? (disabled by default)");
 	CMD_LINE_ARG(bool,          dump_generated_content,        "Dump generated content for template");
+
+	// TODO(FiTH): rename?
+	static inline llvm::cl::list<std::string> content_flag_opt { "add-content-flag" };
+	static inline llvm::cl::list<std::string> content_json_opt { "add-content-json" };
 };
 
 }

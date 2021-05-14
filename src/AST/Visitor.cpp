@@ -213,12 +213,14 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 		}
 	}
 
-	auto& type_content = content["type"];
-	type_content = type.getAsString(m_printing_policy);
+	content["name"] = type.getAsString(m_printing_policy);
 
 	// TODO(FiTH): && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)
-	if (is_type_used)
-		m_used_types.emplace(type_content.get_ref<const std::string&>());
+	if (is_type_used) {
+		// TODO(FiTH): add this as a new field to content?
+		auto canonical_name = type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy);
+		m_used_types.try_emplace(canonical_name, content);
+	}
 }
 
 void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept
@@ -352,7 +354,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	for (const auto& decl_parameter: decl->parameters()) {
 		auto& param = parameters.emplace_back();
 
-		this->gen_type_content(decl_parameter->getType(), param);
+		this->gen_type_content(decl_parameter->getType(), param["type"]);
 		this->gen_named_decl_content(decl_parameter, param);
 
 		const bool hasDefaultArg = decl_parameter->hasDefaultArg();
@@ -493,7 +495,7 @@ void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl
 		content["offset_in_chars"] = layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT + base_offset_in_chars;
 
 		this->gen_named_decl_content(field, content);
-		this->gen_type_content(field->getType(), content, /* is_type_used */ true);
+		this->gen_type_content(field->getType(), content["type"], /* is_type_used */ true);
 	}
 }
 
@@ -643,9 +645,8 @@ void Visitor::post_visit() noexcept
 	for (const auto& type: m_defined_types)
 		m_used_types.erase(type);
 
-	auto& used_types_content = m_tmpl_content["used_types"];
-	for (const auto& type: m_used_types)
-		used_types_content += type;
+	// TODO(FiTH): 'm_used_types' must be a reference?
+	m_tmpl_content["used_types"] = std::move(m_used_types);
 }
 
 }

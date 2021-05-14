@@ -5,6 +5,7 @@
 #include "transformer/AST/Action.h"
 #include "transformer/Config.h"
 #include "transformer/File.h"
+#include "transformer/Log.h"
 
 namespace
 {
@@ -38,10 +39,24 @@ int main(int argc, const char* argv[])
 
 	clang::tooling::ClangTool transformer_tool(opt_parser->getCompilations(), opt_parser->getSourcePathList());
 
+	// create template content
 	inja::json tmpl_content;
-	auto action = std::make_unique<SimpleFrontendActionFactory>(tmpl_content);
+	for (const auto& flag: transformer::Config::content_flag_opt)
+		tmpl_content[flag] = true;
+
+	for (const auto& json_str: transformer::Config::content_json_opt) {
+		auto json = inja::json::parse(json_str);
+		if (json.is_object() == false) {
+			TF_LOG_ERROR("Argument '", transformer::Config::content_json_opt.ArgStr, "' must be an object: ", json_str);
+			return EXIT_FAILURE;
+		}
+
+		for (auto& [key, val]: json.items())
+			tmpl_content[key] = std::move(val);
+	}
 
 	// parse cpp code
+	auto action = std::make_unique<SimpleFrontendActionFactory>(tmpl_content);
 	int ret = transformer_tool.run(action.get());
 	if (ret != EXIT_SUCCESS)
 		return ret;

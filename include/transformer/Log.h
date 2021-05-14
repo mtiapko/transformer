@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <llvm/ADT/StringRef.h>
+
 #define TF_PRINT_IMPL(out, ...) transformer::Log::print(std::c##out, ##__VA_ARGS__, '\n');
 #define TF_PRINT(...)           TF_PRINT_IMPL(log, ##__VA_ARGS__);
 #define TF_PRINT_ERR(...)       TF_PRINT_IMPL(err, ##__VA_ARGS__);
@@ -20,6 +22,12 @@
 
 namespace transformer
 {
+
+inline std::ostream& operator<<(std::ostream& out, const llvm::StringRef& str) noexcept
+{
+	out.write(str.data(), str.size());
+	return out;
+}
 
 class Log
 {

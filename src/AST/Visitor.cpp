@@ -171,9 +171,11 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	SET_VALUE_OF(type, isConstQualified);
 	SET_VALUE_OF(type, isVolatileQualified);
 
-	content["is_builtin" ] = type->isBuiltinType();
-	content["is_record"  ] = type->isRecordType();
-	content["is_enumeral"] = type->isEnumeralType();
+	content["is_builtin"         ] = type->isBuiltinType();
+	content["is_record"          ] = type->isRecordType();
+	content["is_enumeral"        ] = type->isEnumeralType();
+	content["is_signed_integer"  ] = type->isSignedIntegerType();
+	content["is_unsigned_integer"] = type->isUnsignedIntegerType();
 
 	// TODO(FiTH): check if this is too slow
 
@@ -216,7 +218,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	content["name"] = type.getAsString(m_printing_policy);
 
 	// TODO(FiTH): && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)
-	if (is_type_used) {
+	if (is_type_used && type->isBuiltinType() == false) {
 		// TODO(FiTH): add this as a new field to content?
 		auto canonical_name = type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy);
 		m_used_types.try_emplace(canonical_name, content);
@@ -284,13 +286,13 @@ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
 }
 
 void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
-	inja::json& content) const noexcept
+	inja::json& content) noexcept
 {
 	SET_VALUE(isScoped);
 	SET_VALUE(isScopedUsingClassTag);
 	SET_VALUE(isFixed);
 
-	content["integer_type"] = decl->getIntegerType().getAsString(m_printing_policy);
+	this->gen_type_content(decl->getIntegerType(), content["integer_type"]);
 
 	auto& enumerators_content                  = content["enumerators"];
 	auto& enumerators_grouped_by_value_content = content["enumerators_grouped_by_value"];
@@ -306,19 +308,22 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 		std::array<char, 32> enum_init_val_str {};
 
 		const auto& enum_init_val = decl_enumerator->getInitVal();
+		assert(enum_init_val.isSigned() == decl->getIntegerType()->isSignedIntegerType()); // TODO(FiTH)
+
 		if (enum_init_val.isSigned()) {
 			int64_t signed_value = enum_init_val.getExtValue();
-			e_value_content = signed_value;
 
 			auto [ptr, ec] = std::to_chars(enum_init_val_str.begin(), enum_init_val_str.end() - 1, signed_value);
 			*ptr = '\0';
 		} else {
 			uint64_t unsigned_value = enum_init_val.getZExtValue();
-			e_value_content = unsigned_value;
 
 			auto [ptr, ec] = std::to_chars(enum_init_val_str.begin(), enum_init_val_str.end() - 1, unsigned_value);
 			*ptr = '\0';
 		}
+
+		// TODO(FiTH): ohhh... inja does not distinguish between signed and unsigned integers
+		e_value_content = enum_init_val_str.data();
 
 		// key: enumerators value -> data: array of enumerators (all have the same value)
 		enumerators_grouped_by_value_content[enum_init_val_str.data()] += e;
@@ -345,10 +350,10 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 	SET_VALUE_WITH_NAME(getMinRequiredArguments, MinRequiredArguments);
 
 	// TODO(FiTH):
-	//    - check 'noexcept' of this func
+	//    - check 'noexcept' of this func (decl->getExceptionSpecType() & clang::ExceptionSpecificationType::EST_BasicNoexcept)
 	//    - check 'const' of this func
 
-	content["return_type"] = decl->getReturnType().getAsString(m_printing_policy);
+	this->gen_type_content(decl->getReturnType(), content["return_type"]);
 
 	auto& parameters = content["parameters"];
 	for (const auto& decl_parameter: decl->parameters()) {

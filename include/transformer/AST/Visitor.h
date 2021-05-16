@@ -38,7 +38,7 @@ private:
 	void        gen_named_decl_content(const clang::NamedDecl* decl, inja::json& content, bool is_type_decl = false) noexcept;
 	static void gen_tag_decl_content(const clang::TagDecl* decl, inja::json& content) noexcept;
 	static void gen_record_decl_content(const clang::RecordDecl* decl, inja::json& content) noexcept;
-	void        gen_enum_decl_content(const clang::EnumDecl* decl, inja::json& content) const noexcept;
+	void        gen_enum_decl_content(const clang::EnumDecl* decl, inja::json& content) noexcept;
 	void        gen_func_decl_content(const clang::FunctionDecl* decl, inja::json& content) noexcept;
 
 	static void gen_class_dflt_ctor_content(const clang::CXXRecordDecl* decl, inja::json& content) noexcept;

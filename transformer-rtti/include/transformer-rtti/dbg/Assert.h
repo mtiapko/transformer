@@ -3,7 +3,7 @@
 
 #include <assert.h> // TODO(FiTH): remove
 
-#include "transformer-rtti/Config.h"
+#include "transformer-rtti/dbg/Log.h"
 
 #define RTTI_ASSERT(x, ...) assert(x)
 

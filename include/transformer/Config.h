@@ -57,6 +57,7 @@ public:
 	CMD_LINE_STR_ARG_WITH_ALIAS(output_file_path,         "o", "Output file path",   llvm::cl::value_desc("file path"));
 	CMD_LINE_ARG(bool,          gen_content_for_includes,      "Generate content for included files? (disabled by default)");
 	CMD_LINE_ARG(bool,          dump_generated_content,        "Dump generated content for template");
+	CMD_LINE_ARG(bool,          report_used_builtin_types,     "Report used built-in types to 'used_types' variable");
 
 	// TODO(FiTH): rename?
 	static inline llvm::cl::list<std::string> content_flag_opt { "add-content-flag" };

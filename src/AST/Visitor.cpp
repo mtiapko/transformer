@@ -217,8 +217,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 
 	content["name"] = type.getAsString(m_printing_policy);
 
-	// TODO(FiTH): && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)
-	if (is_type_used && type->isBuiltinType() == false) {
+	if (is_type_used && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)) {
 		// TODO(FiTH): add this as a new field to content?
 		auto canonical_name = type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy);
 		m_used_types.try_emplace(canonical_name, content);

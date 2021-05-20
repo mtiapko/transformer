@@ -1,6 +1,7 @@
 #ifndef __TRANSFORMER_AST_VISITOR_H__
 #define __TRANSFORMER_AST_VISITOR_H__
 
+#include <filesystem>
 #include <set>
 
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -25,12 +26,14 @@ private:
 	std::vector<std::string> m_defined_types;
 
 private: // TODO(FiTH): get this from command line
-	std::string m_rtti_attributes_namespace = "rtti::";
+	std::string           m_rtti_attributes_namespace = "rtti::";
+	std::filesystem::path m_relative_dir_path;
 
 private:
 	bool is_from_main_file(const clang::Decl* decl) const noexcept;
 	bool does_decl_require_content_gen(const clang::Decl* decl) const noexcept;
 	std::vector<std::string> split_annotate_attributes(const inja::json& annotate_attr, inja::json& content) const noexcept;
+	std::string get_relative_path(std::string_view path) const noexcept;
 
 private:
 	void        gen_type_content(const clang::QualType& type, inja::json& content, bool is_used_type = false) noexcept;

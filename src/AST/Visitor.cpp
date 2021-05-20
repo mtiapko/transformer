@@ -61,6 +61,7 @@ namespace transformer::AST
 
 bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 {
+	// TODO(FiTH): check 'src_mgr.isInMainFile()' and 'src_mgr.isWrittenInMainFile()'
 	const auto& src_mgr = m_context.getSourceManager();
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
 }
@@ -160,6 +161,11 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 	return attr_list;
 }
 
+std::string Visitor::get_relative_path(std::string_view path) const noexcept
+{
+	return std::filesystem::relative(path, m_relative_dir_path);
+}
+
 #define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
 #define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
@@ -235,7 +241,7 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 		content["access"] = clang::getAccessSpelling(decl_access);
 
 	const auto& src_mgr = m_context.getSourceManager();
-	content["filename"] = src_mgr.getFilename(decl->getLocation());
+	content["file_path"] = src_mgr.getFilename(decl->getLocation());
 
 	auto& annotate_attributes_content = content["annotate_attributes"];
 	for (const auto& attr: decl->attrs()) {
@@ -590,7 +596,18 @@ Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noe
 	, m_tmpl_classes(tmpl_content["classes"  ])
 	, m_tmpl_enums  (tmpl_content["enums"    ])
 	, m_tmpl_funcs  (tmpl_content["functions"])
-{}
+
+	, m_relative_dir_path(
+		Config::relative_dir_path_opt.empty() == false
+			? std::filesystem::path(Config::relative_dir_path_opt.getValue())
+			: std::filesystem::current_path()
+	)
+{
+	const auto& src_mgr = m_context.getSourceManager();
+	m_tmpl_content["main_file_path"] = Visitor::get_relative_path(
+		src_mgr.getFilename(src_mgr.getLocForStartOfFile(src_mgr.getMainFileID()))
+	);
+}
 
 bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 {

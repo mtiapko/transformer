@@ -6,7 +6,7 @@
 namespace transformer::rtti
 {
 
-template<typename T, size_t N>
+template<typename T, std::size_t N>
 using Array = std::array<T, N>;
 
 }

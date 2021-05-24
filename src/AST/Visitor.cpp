@@ -66,6 +66,16 @@ bool Visitor::is_from_main_file(const clang::Decl* decl) const noexcept
 	return (src_mgr.getFileID(decl->getLocation()) == src_mgr.getMainFileID());
 }
 
+/* static */ bool Visitor::is_std_internal_name(std::string_view type_name) noexcept
+{
+	const auto is_capital = [](const char c) noexcept { return (c >= 'A' && c <= 'Z'); };
+
+	if (type_name.size() >= 2 && type_name[0] == '_' && (type_name[1] == '_' || is_capital(type_name[1])))
+		return true; // TODO(FiTH): check if TOP level namespace is 'std'
+
+	return false;
+}
+
 bool Visitor::does_decl_require_content_gen(const clang::Decl* decl) const noexcept
 {
 	// TODO(FiTH): check this? - decl->isDefinedOutsideFunctionOrMethod()
@@ -174,14 +184,30 @@ std::string Visitor::get_relative_path(std::string_view path) const noexcept
 // NOTE(FiTH): 'is_type_used' is true only for types of fields (required only for serialization?)
 void Visitor::gen_type_content(const clang::QualType& type, inja::json& content, bool is_type_used /* = false */) noexcept
 {
+	auto access = clang::AccessSpecifier::AS_none;
+	bool is_std_internal_type = false;
+
+	if (type->isRecordType()) {
+		const auto* record_type = type->getAsRecordDecl();
+		access = record_type->getAccess();
+
+		const auto& record_name = record_type->getName();
+		is_std_internal_type = Visitor::is_std_internal_name(record_name);
+	}
+
 	SET_VALUE_OF(type, isConstQualified);
 	SET_VALUE_OF(type, isVolatileQualified);
 
-	content["is_builtin"         ] = type->isBuiltinType();
-	content["is_record"          ] = type->isRecordType();
-	content["is_enumeral"        ] = type->isEnumeralType();
-	content["is_signed_integer"  ] = type->isSignedIntegerType();
-	content["is_unsigned_integer"] = type->isUnsignedIntegerType();
+	content["is_builtin"          ] = type->isBuiltinType();
+	content["is_record"           ] = type->isRecordType();
+	content["is_enumeral"         ] = type->isEnumeralType();
+	content["is_signed_integer"   ] = type->isSignedIntegerType();
+	content["is_unsigned_integer" ] = type->isUnsignedIntegerType();
+	content["is_std_internal_type"] = is_std_internal_type;
+
+	// TODO(FiTH): record or enum?
+	// TODO(FiTH): rename to 'access_specifier'?
+	content["access"] = (access != clang::AccessSpecifier::AS_none ? clang::getAccessSpelling(access) : "");
 
 	// TODO(FiTH): check if this is too slow
 
@@ -223,7 +249,8 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 
 	content["name"] = type.getAsString(m_printing_policy);
 
-	if (is_type_used && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)) {
+	// TODO(FiTH): add cmd-line flag to report even 'std internal' types?
+	if (is_type_used && (is_std_internal_type == false) && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)) {
 		// TODO(FiTH): add this as a new field to content?
 		auto canonical_name = type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy);
 		m_used_types.try_emplace(canonical_name, content);
@@ -238,7 +265,7 @@ void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) con
 
 	auto decl_access = decl->getAccess();
 	if (decl_access != clang::AccessSpecifier::AS_none)
-		content["access"] = clang::getAccessSpelling(decl_access);
+		content["access"] = clang::getAccessSpelling(decl_access); // TODO(FiTH): rename to 'access_specifier'?
 
 	const auto& src_mgr = m_context.getSourceManager();
 	content["file_path"] = src_mgr.getFilename(decl->getLocation());
@@ -499,13 +526,16 @@ void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl
 
 	for (const auto& field: decl->fields()) {
 		auto& content = fields_content.emplace_back();
+		const bool is_anonymous_struct_or_union = field->isAnonymousStructOrUnion();
+		content["is_anonymous_struct_or_union"] = is_anonymous_struct_or_union;
 		content["offset_in_bits"] = layout.getFieldOffset(field->getFieldIndex()) + base_offset_in_bits;
 
 		// TODO(FiTH): add check and set to MAX if this is bit field
 		content["offset_in_chars"] = layout.getFieldOffset(field->getFieldIndex()) / CHAR_BIT + base_offset_in_chars;
 
+		this->gen_decl_content(field, content);
 		this->gen_named_decl_content(field, content);
-		this->gen_type_content(field->getType(), content["type"], /* is_type_used */ true);
+		this->gen_type_content(field->getType(), content["type"], /* is_type_used */ (is_anonymous_struct_or_union == false));
 	}
 }
 
@@ -555,6 +585,8 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	content["size_in_chars"     ] = record_layout.getSize().getQuantity();
 	content["data_size_in_chars"] = record_layout.getDataSize().getQuantity();
 
+	// TODO(FiTH): 'fields' and 'methods' must be objects, not array? format: { "<field-name>", { <field-content> } }?
+	// TODO(FiTH): handle inherited fields with the same name. For duplicated fields from bases add prefix "Base::"?
 	auto& bases_content = content["base_classes"];
 	auto& fields_content = content["fields"];
 
@@ -633,7 +665,14 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 
 bool Visitor::VisitEnumDecl(const clang::EnumDecl* decl) noexcept
 {
-	if (decl->isCompleteDefinition() && this->does_decl_require_content_gen(decl)) {
+	if (
+		decl->isCompleteDefinition() &&
+		this->does_decl_require_content_gen(decl) &&
+
+		// TODO(FiTH): this is (anonymous) enum? rewrite, check NamedDecl::printQualifiedName,
+		//             method NamedDecl::printName is virtual?
+		decl->getDeclName().isEmpty() == false
+	) {
 		auto& content = m_tmpl_enums.emplace_back();
 
 		this->gen_decl_content(decl, content);

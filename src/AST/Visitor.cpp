@@ -645,11 +645,18 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 {
 	// NOTE(FiTH): decl->isAnonymousStructOrUnion() does not work for some reason
 
+	// TODO(FiTH): add? decl->getDeclKind() != ClassTemplatePartialSpecialization
+	// TODO(FiTH): add? decl->isDependentType() == false
 	if (
 		decl->isCompleteDefinition() &&
 		decl->getIdentifier() != nullptr &&
 		this->does_decl_require_content_gen(decl)
 	) {
+		// TODO(FiTH): rewrite this 'if'?
+		const auto& src_mgr = m_context.getSourceManager();
+		if (src_mgr.isInSystemHeader(decl->getLocation()))
+			return true;
+
 		auto& content = m_tmpl_classes.emplace_back();
 
 		this->gen_decl_content(decl, content);

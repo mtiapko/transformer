@@ -342,6 +342,7 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 		const auto& enum_init_val = decl_enumerator->getInitVal();
 		assert(enum_init_val.isSigned() == decl->getIntegerType()->isSignedIntegerType()); // TODO(FiTH)
 
+		// TODO(FiTH): if enum_init_val.{getMinSignedBits or getActiveBits}() > 32 -> add "l" or "ll" at the end?
 		if (enum_init_val.isSigned()) {
 			int64_t signed_value = enum_init_val.getExtValue();
 
@@ -489,16 +490,16 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 }
 
 void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
-	clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content, inja::json& fields_content) noexcept
+	clang::CharUnits::QuantityType current_offset_in_chars, inja::json& bases_content, inja::json& fields_content) noexcept
 {
 	for (const auto& base: decl->bases()) {
 		const auto* base_decl   = base.getType()->getAsCXXRecordDecl();
 		const auto& base_layout = m_context.getASTRecordLayout(base_decl);
 
 		// TODO(FiTH): getVBaseClassOffset?
-		auto base_offset_in_chars = layout.getBaseClassOffset(base_decl).getQuantity() + offset_in_chars;
+		auto base_offset_in_chars = layout.getBaseClassOffset(base_decl).getQuantity() + current_offset_in_chars;
 
-		this->gen_class_all_bases_full_content(base_decl, base_layout, offset_in_chars, bases_content, fields_content);
+		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content);
 
 		auto& content = bases_content.emplace_back();
 		content["offset_in_chars"       ] = base_offset_in_chars;

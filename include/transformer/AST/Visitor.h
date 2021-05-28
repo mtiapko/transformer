@@ -53,7 +53,7 @@ private:
 	static void gen_class_destructor_content(const clang::CXXRecordDecl* decl, inja::json& content) noexcept;
 
 	void        gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
-					clang::CharUnits::QuantityType offset_in_chars, inja::json& bases_content,
+					clang::CharUnits::QuantityType current_offset_in_chars, inja::json& bases_content,
 					inja::json& fields_content) noexcept;
 	void        gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
 					clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) noexcept;

@@ -248,6 +248,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	}
 
 	content["name"] = type.getAsString(m_printing_policy);
+	content["canonical_name"] = type.getCanonicalType().getAsString(m_printing_policy);
 
 	// TODO(FiTH): add cmd-line flag to report even 'std internal' types?
 	if (is_type_used && (is_std_internal_type == false) && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)) {

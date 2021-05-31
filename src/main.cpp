@@ -70,7 +70,6 @@ int main(int argc, const char* argv[])
 	// generate output
 	auto env = inja::Environment {};
 	env.set_trim_blocks(true);
-	env.set_lstrip_blocks(true);
 	// env.set_lstrip_blocks(...);
 
 	// add custom callbacks

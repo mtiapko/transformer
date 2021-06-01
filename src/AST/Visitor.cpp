@@ -223,6 +223,9 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 		content["is_non_const_reference"] = (ref_type != nullptr && !is_const_reference);
 		if (ref_type != nullptr)
 			this->gen_type_content(ref_type->getPointeeType(), content[pointee_content_name], is_type_used);
+
+		content["is_lvalue_reference"] = (ref_type != nullptr && type->getAs<clang::LValueReferenceType>());
+		content["is_rvalue_reference"] = (ref_type != nullptr && type->getAs<clang::RValueReferenceType>());
 	}
 
 	// ptr info

@@ -603,6 +603,14 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	auto& overloaded_operators_equal_content = content["overloaded_operators_equal"];
 
 	for (const auto& method: decl->methods()) {
+		// TODO(FiTH): skip this decl? or set 'content_ptr' to 'conversion_functions'?
+		if (llvm::isa<clang::CXXConversionDecl>(method))
+			continue;
+
+		// TODO(FiTH): add cmd-line flag to report deprecated methods?
+		if (method->hasAttr<clang::DeprecatedAttr>())
+			continue;
+
 		inja::json* content_ptr = (llvm::isa<clang::CXXConstructorDecl>(method)
 			? &constructors_content
 			: method->getOverloadedOperator() == clang::OverloadedOperatorKind::OO_Equal

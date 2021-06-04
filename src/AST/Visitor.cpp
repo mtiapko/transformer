@@ -176,6 +176,60 @@ std::string Visitor::get_relative_path(std::string_view path) const noexcept
 	return std::filesystem::relative(path, m_relative_dir_path);
 }
 
+/* static */ void Visitor::append_scope(const clang::DeclContext* decl_ctx, llvm::raw_ostream& ostream) noexcept
+{
+	if (decl_ctx->isTranslationUnit())
+		return;
+
+	// FIXME: Consider replacing this with NamedDecl::printNestedNameSpecifier,
+	// which can also print names for function and method scopes.
+	if (decl_ctx->isFunctionOrMethod())
+		return;
+
+	// if (Policy.Callbacks && Policy.Callbacks->isScopeVisible(decl_ctx))
+	// 	return;
+
+	if (const auto *NS = dyn_cast<clang::NamespaceDecl>(decl_ctx)) {
+		// if (Policy.SuppressUnwrittenScope && NS->isAnonymousNamespace())
+		// 	return Visitor::append_scope(decl_ctx->getParent(), ostream, NameInScope);
+
+		// Only suppress an inline namespace if the name has the same lookup
+		// results in the enclosing namespace.
+		// if (Policy.SuppressInlineNamespace && NS->isInline() && NameInScope &&
+		// 		NS->isRedundantInlineQualifierFor(NameInScope))
+		// 	return Visitor::append_scope(decl_ctx->getParent(), ostream, NameInScope);
+
+		Visitor::append_scope(decl_ctx->getParent(), ostream);
+		if (NS->getIdentifier())
+			ostream << NS->getName() << "::";
+		else
+			ostream << "(anonymous namespace)::";
+	} else if (const auto *Spec = dyn_cast<clang::ClassTemplateSpecializationDecl>(decl_ctx)) {
+		// 	assert(false);
+		(void)Spec;
+		ostream << "(class tmpl spec)";
+
+		// Visitor::append_scope(decl_ctx->getParent(), ostream, Spec->getDeclName());
+		// IncludeStrongLifetimeRAII Strong(Policy);
+		// ostream << Spec->getIdentifier()->getName();
+		// const TemplateArgumentList &TemplateArgs = Spec->getTemplateArgs();
+		// printTemplateArgumentList(
+		// 	ostream, TemplateArgs.asArray(), Policy,
+		// 	Spec->getSpecializedTemplate()->getTemplateParameters());
+		// ostream << "::";
+	} else if (const auto *Tag = dyn_cast<clang::TagDecl>(decl_ctx)) {
+		Visitor::append_scope(decl_ctx->getParent(), ostream);
+		if (clang::TypedefNameDecl *Typedef = Tag->getTypedefNameForAnonDecl())
+			ostream << Typedef->getIdentifier()->getName() << "::";
+		else if (Tag->getIdentifier())
+			ostream << Tag->getIdentifier()->getName() << "::";
+		else
+			return;
+	} else {
+		Visitor::append_scope(decl_ctx->getParent(), ostream);
+	}
+}
+
 #define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
 #define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)

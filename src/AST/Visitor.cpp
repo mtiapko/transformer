@@ -570,8 +570,19 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		SET_VALUE_OF(base, isVirtual);
 		SET_VALUE_OF(base, getInheritConstructors);
 
-		content["name"] = base.getType().getAsString(m_printing_policy);
-		content["access_specifier"] = clang::getAccessSpelling(base.getAccessSpecifier());
+		std::string base_name_scope;
+		if (base.getType()->getTypeClass() == clang::Type::TypeClass::TemplateSpecialization) {
+			const auto* base_record_decl = base.getType()->getAsRecordDecl();
+			assert(base_record_decl != nullptr); // TODO(FiTH)
+
+			llvm::raw_string_ostream out_stream(base_name_scope);
+			Visitor::append_scope(base_record_decl->getDeclContext(), out_stream);
+		}
+
+		const auto base_name = base.getType().getAsString(m_printing_policy);
+		content["name"                ] = base_name_scope + base_name;
+		content["access_specifier"    ] = clang::getAccessSpelling(base.getAccessSpecifier());
+		content["is_std_internal_type"] = Visitor::is_std_internal_name(base_name);
 
 		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
 		// TODO(FiTH): also gen content for all inherited methods?

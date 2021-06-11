@@ -176,6 +176,54 @@ std::string Visitor::get_relative_path(std::string_view path) const noexcept
 	return std::filesystem::relative(path, m_relative_dir_path);
 }
 
+// TODO(FiTH): erase 'volatile'
+/* static */ std::string Visitor::erase_all_const(std::string str) noexcept
+{
+	// NOTE(FiTH): std::string is always null-terminated (str[str.size()] == CharT())
+	const auto skip_whitespaces = [](const std::string& str, size_t beg_index) noexcept
+	{
+		while (true) {
+			const char c = str[beg_index];
+			if (c != ' ' && c != '\t')
+				break;
+
+			++beg_index;
+		}
+
+		return beg_index;
+	};
+
+	const auto is_not_identifier_part = [](const char current_char) noexcept
+	{
+		const auto to_lower_case = [](const char c) noexcept { return (c >= 'A' && c <= 'Z' ? (c | (1 << 5)) : c); };
+		const auto c = to_lower_case(current_char);
+
+		return (
+			(c < 'a' || c > 'z') &&
+			(c < '0' || c > '9') &&
+			c != '_'
+		);
+	};
+
+	size_t const_iter = 0;
+
+	while ((const_iter = str.find("const", const_iter)) != std::string::npos) {
+		const auto beg_iter = const_iter;
+		const auto end_iter = const_iter + 5; // TODO(FiTH): "const"
+
+		if (
+				(beg_iter == 0          || is_not_identifier_part(str[beg_iter - 1])) &&
+				(end_iter == str.size() || is_not_identifier_part(str[end_iter]))
+		) {
+			str.erase(beg_iter, skip_whitespaces(str, end_iter) - beg_iter);
+		} else {
+			const_iter += 5; // TODO(FiTH): "const"
+		}
+	}
+
+	return str;
+}
+
 /* static */ void Visitor::append_scope(const clang::DeclContext* decl_ctx, llvm::raw_ostream& ostream) noexcept
 {
 	if (decl_ctx->isTranslationUnit())

@@ -607,17 +607,6 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 
 		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content);
 
-		auto& content = bases_content.emplace_back();
-		content["offset_in_chars"       ] = base_offset_in_chars;
-		content["vb_ptr_offset_in_chars"] = layout.getVBPtrOffset().getQuantity();
-		content["has_own_vf_ptr"        ] = layout.hasOwnVFPtr();
-		content["has_extendable_vf_ptr" ] = layout.hasExtendableVFPtr();
-		content["has_own_vb_ptr"        ] = layout.hasOwnVBPtr();
-		content["has_vb_ptr"            ] = layout.hasVBPtr();
-
-		SET_VALUE_OF(base, isVirtual);
-		SET_VALUE_OF(base, getInheritConstructors);
-
 		std::string base_name_scope;
 		if (base.getType()->getTypeClass() == clang::Type::TypeClass::TemplateSpecialization) {
 			const auto* base_record_decl = base.getType()->getAsRecordDecl();
@@ -627,10 +616,26 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 			Visitor::append_scope(base_record_decl->getDeclContext(), out_stream);
 		}
 
-		const auto base_name = base.getType().getAsString(m_printing_policy);
-		content["name"                ] = base_name_scope + base_name;
+		const auto base_type_name = base.getType().getAsString(m_printing_policy);
+		const auto base_name = base_name_scope + base_type_name;
+
+		auto [content_iter, is_inserted] = bases_content.emplace(base_name, nullptr /* empty json */);
+		assert(is_inserted); // TODO(FiTH): 2 base classes with the same name?
+
+		auto& content = *content_iter;
+		content["name"                ] = base_name;
 		content["access_specifier"    ] = clang::getAccessSpelling(base.getAccessSpecifier());
 		content["is_std_internal_type"] = Visitor::is_std_internal_name(base_name);
+
+		content["offset_in_chars"       ] = base_offset_in_chars;
+		content["vb_ptr_offset_in_chars"] = layout.getVBPtrOffset().getQuantity();
+		content["has_own_vf_ptr"        ] = layout.hasOwnVFPtr();
+		content["has_extendable_vf_ptr" ] = layout.hasExtendableVFPtr();
+		content["has_own_vb_ptr"        ] = layout.hasOwnVBPtr();
+		content["has_vb_ptr"            ] = layout.hasVBPtr();
+
+		SET_VALUE_OF(base, isVirtual);
+		SET_VALUE_OF(base, getInheritConstructors);
 
 		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
 		// TODO(FiTH): also gen content for all inherited methods?

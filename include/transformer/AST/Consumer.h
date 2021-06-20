@@ -11,18 +11,20 @@ namespace transformer::AST
 class Consumer final : public clang::ASTConsumer
 {
 private:
+	const clang::CompilerInstance& m_compiler;
 	inja::json& m_tmpl_content;
 
 public:
-	Consumer(inja::json& tmpl_content) noexcept
-		: m_tmpl_content(tmpl_content)
+	Consumer(const clang::CompilerInstance& compiler, inja::json& tmpl_content) noexcept
+		: m_compiler(compiler)
+		, m_tmpl_content(tmpl_content)
 	{}
 
 
 private:
 	void HandleTranslationUnit(clang::ASTContext& context) noexcept override
 	{
-		Visitor ast_visitor { context, m_tmpl_content };
+		Visitor ast_visitor { m_compiler, context, m_tmpl_content };
 		ast_visitor.TraverseDecl(context.getTranslationUnitDecl());
 		ast_visitor.post_visit();
 	}

@@ -19,9 +19,11 @@ public:
 	{}
 
 private:
-	std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance&, llvm::StringRef) noexcept override
+	std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef) noexcept override
 	{
-		return std::make_unique<Consumer>(m_tmpl_content);
+		compiler.getPreprocessor().createPreprocessingRecord(); // TODO(FiTH): re-check this code
+
+		return std::make_unique<Consumer>(compiler, m_tmpl_content);
 	}
 };
 

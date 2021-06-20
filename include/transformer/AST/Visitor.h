@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <set>
 
+#include <clang/Frontend/CompilerInstance.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <inja/inja.hpp>
 
@@ -13,8 +14,9 @@ namespace transformer::AST
 class Visitor final : public clang::RecursiveASTVisitor<Visitor>
 {
 private:
-	const clang::ASTContext&     m_context;
-	const clang::PrintingPolicy& m_printing_policy;
+	const clang::CompilerInstance& m_compiler;
+	const clang::ASTContext&       m_context;
+	clang::PrintingPolicy          m_printing_policy;
 
 	inja::json& m_tmpl_content;
 	inja::json& m_tmpl_classes;
@@ -56,15 +58,18 @@ private:
 
 	void        gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
 					clang::CharUnits::QuantityType current_offset_in_chars, inja::json& bases_content,
-					inja::json& fields_content) noexcept;
+					inja::json& fields_content, inja::json& methods_content, inja::json& constructors_content,
+					inja::json& overloaded_operators_equal_content) noexcept;
 	void        gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
 					clang::CharUnits::QuantityType base_offset_in_chars, inja::json& fields_content) noexcept;
+	void        gen_class_all_methods_full_content(const clang::CXXRecordDecl* decl, inja::json& methods_content,
+					inja::json* constructors_content, inja::json* overloaded_operators_equal_content) noexcept;
 	void        gen_class_method_full_content(const clang::CXXMethodDecl* decl, inja::json& content) noexcept;
 
 	void        gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl, inja::json& content) noexcept;
 
 public:
-	Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noexcept;
+	Visitor(const clang::CompilerInstance& compiler, const clang::ASTContext& context, inja::json& tmpl_content) noexcept;
 
 	bool VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept;
 	bool VisitEnumDecl(const clang::EnumDecl* decl) noexcept;

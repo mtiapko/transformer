@@ -2,6 +2,8 @@
 
 #include <clang/Basic/SourceManager.h>
 #include <clang/AST/RecordLayout.h>
+#include <clang/Lex/PreprocessingRecord.h>
+#include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/Lexer.h>
 
 #include "transformer/AST/Visitor.h"
@@ -596,7 +598,8 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 }
 
 void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl, const clang::ASTRecordLayout& layout,
-	clang::CharUnits::QuantityType current_offset_in_chars, inja::json& bases_content, inja::json& fields_content) noexcept
+	clang::CharUnits::QuantityType current_offset_in_chars, inja::json& bases_content, inja::json& fields_content,
+	inja::json& methods_content, inja::json& constructors_content, inja::json& overloaded_operators_equal_content) noexcept
 {
 	for (const auto& base: decl->bases()) {
 		const auto* base_decl   = base.getType()->getAsCXXRecordDecl();
@@ -605,7 +608,8 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		// TODO(FiTH): getVBaseClassOffset?
 		auto base_offset_in_chars = layout.getBaseClassOffset(base_decl).getQuantity() + current_offset_in_chars;
 
-		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content);
+		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content,
+			methods_content, constructors_content, overloaded_operators_equal_content);
 
 		std::string base_name_scope;
 		if (base.getType()->getTypeClass() == clang::Type::TypeClass::TemplateSpecialization) {
@@ -638,7 +642,8 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		SET_VALUE_OF(base, getInheritConstructors);
 
 		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
-		// TODO(FiTH): also gen content for all inherited methods?
+		this->gen_class_all_methods_full_content(base_decl, methods_content,
+			/* constructors_content */ nullptr, /* overloaded_operators_equal_content */ nullptr);
 	}
 }
 
@@ -659,6 +664,36 @@ void Visitor::gen_class_all_fields_full_content(const clang::CXXRecordDecl* decl
 		this->gen_decl_content(field, content);
 		this->gen_named_decl_content(field, content);
 		this->gen_type_content(field->getType(), content["type"], /* is_type_used */ (is_anonymous_struct_or_union == false));
+	}
+}
+
+void Visitor::gen_class_all_methods_full_content(const clang::CXXRecordDecl* decl, inja::json& methods_content,
+	inja::json* constructors_content, inja::json* overloaded_operators_equal_content) noexcept
+{
+	// TODO(FiTH): handle case with overrided methods
+	for (const auto& method: decl->methods()) {
+		// TODO(FiTH): skip this decl? or set 'content_ptr' to 'conversion_functions'?
+		if (llvm::isa<clang::CXXConversionDecl>(method))
+			continue;
+
+		if (llvm::isa<clang::CXXDestructorDecl>(method))
+			continue;
+
+		// TODO(FiTH): add cmd-line flag to report deprecated methods?
+		if (method->hasAttr<clang::DeprecatedAttr>())
+			continue;
+
+		inja::json* content_ptr = (llvm::isa<clang::CXXConstructorDecl>(method)
+			? constructors_content
+			: method->getOverloadedOperator() == clang::OverloadedOperatorKind::OO_Equal
+				? overloaded_operators_equal_content
+				: &methods_content
+		);
+
+		if (content_ptr == nullptr)
+			continue;
+
+		this->gen_class_method_full_content(method, content_ptr->emplace_back());
 	}
 }
 
@@ -713,31 +748,14 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 	auto& bases_content = content["base_classes"];
 	auto& fields_content = content["fields"];
 
-	this->gen_class_all_bases_full_content(decl, record_layout, /* offset of first base */ 0, bases_content, fields_content);
-	this->gen_class_all_fields_full_content(decl, record_layout, /* offset of first field */ 0, fields_content);
-
 	auto& methods_content                    = content["methods"];
 	auto& constructors_content               = content["constructors"];
 	auto& overloaded_operators_equal_content = content["overloaded_operators_equal"];
 
-	for (const auto& method: decl->methods()) {
-		// TODO(FiTH): skip this decl? or set 'content_ptr' to 'conversion_functions'?
-		if (llvm::isa<clang::CXXConversionDecl>(method))
-			continue;
-
-		// TODO(FiTH): add cmd-line flag to report deprecated methods?
-		if (method->hasAttr<clang::DeprecatedAttr>())
-			continue;
-
-		inja::json* content_ptr = (llvm::isa<clang::CXXConstructorDecl>(method)
-			? &constructors_content
-			: method->getOverloadedOperator() == clang::OverloadedOperatorKind::OO_Equal
-				? &overloaded_operators_equal_content
-				: &methods_content
-		);
-
-		this->gen_class_method_full_content(method, content_ptr->emplace_back());
-	}
+	this->gen_class_all_bases_full_content(decl, record_layout, /* offset of first base */ 0, bases_content, fields_content,
+		methods_content, constructors_content, overloaded_operators_equal_content);
+	this->gen_class_all_fields_full_content(decl, record_layout, /* offset of first field */ 0, fields_content);
+	this->gen_class_all_methods_full_content(decl, methods_content, &constructors_content, &overloaded_operators_equal_content);
 
 	auto& conv_funcs_content = content["conversion_functions"];
 	for (const auto& conv_func: decl->getVisibleConversionFunctions())
@@ -751,8 +769,9 @@ void Visitor::gen_cxx_record_decl_content(const clang::CXXRecordDecl* decl,
 #undef SET_VALUE_OF
 #undef SET_VALUE_OF_PTR
 
-Visitor::Visitor(const clang::ASTContext& context, inja::json& tmpl_content) noexcept
-	: m_context(context)
+Visitor::Visitor(const clang::CompilerInstance& compiler, const clang::ASTContext& context, inja::json& tmpl_content) noexcept
+	: m_compiler(compiler)
+	, m_context(context)
 	, m_printing_policy(context.getPrintingPolicy())
 
 	, m_tmpl_content(tmpl_content             )

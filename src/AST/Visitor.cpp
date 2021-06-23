@@ -789,6 +789,26 @@ Visitor::Visitor(const clang::CompilerInstance& compiler, const clang::ASTContex
 	m_tmpl_content["main_file_path"] = Visitor::get_relative_path(
 		src_mgr.getFilename(src_mgr.getLocForStartOfFile(src_mgr.getMainFileID()))
 	);
+
+	auto& included_files_content = m_tmpl_content["included_files"];
+	if (auto* pp_record = m_compiler.getPreprocessor().getPreprocessingRecord(); pp_record != nullptr) {
+		for (const auto* pp_entity: *pp_record) {
+			if (pp_entity->getKind() != clang::PreprocessedEntity::EntityKind::InclusionDirectiveKind)
+				continue;
+
+			const auto* include_entity = static_cast<const clang::InclusionDirective*>(pp_entity);
+			if (include_entity->getKind() != clang::InclusionDirective::InclusionKind::Include)
+				continue;
+
+			if (src_mgr.isInMainFile(include_entity->getSourceRange().getBegin()) == false)
+				continue;
+
+			auto& include_content = included_files_content.emplace_back();
+			include_content["file_path"] = include_entity->getFileName();
+			include_content["was_in_quotes"] = include_entity->wasInQuotes();
+
+		}
+	}
 }
 
 bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept

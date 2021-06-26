@@ -24,8 +24,10 @@ private:
 	inja::json& m_tmpl_funcs;
 
 	// TODO(FiTH): is it possible to define types with the same name in one file (not templates)?
-	inja::json::object_t     m_used_types;
-	std::vector<std::string> m_defined_types;
+	inja::json::object_t  m_used_types;
+	std::set<std::string> m_defined_types;
+
+	std::vector<const clang::Type*> m_used_template_spec;
 
 private: // TODO(FiTH): get this from command line
 	std::string           m_rtti_attributes_namespace = "rtti::";
@@ -39,6 +41,7 @@ private:
 	std::string get_relative_path(std::string_view path) const noexcept;
 	static std::string erase_all_const(std::string str) noexcept;
 	static void append_scope(const clang::DeclContext* decl_ctx, llvm::raw_ostream& ostream) noexcept;
+	std::string get_qualified_name_as_string(const clang::NamedDecl* decl) const noexcept;
 
 private:
 	void        gen_type_content(const clang::QualType& type, inja::json& content, bool is_used_type = false) noexcept;

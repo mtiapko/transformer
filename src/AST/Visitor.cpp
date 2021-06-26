@@ -8,6 +8,7 @@
 
 #include "transformer/AST/Visitor.h"
 #include "transformer/Config.h"
+#include "transformer/Log.h"
 
 // TODO(FiTH): check 'llvm::StringRef' to 'json' conversion
 
@@ -280,6 +281,18 @@ std::string Visitor::get_relative_path(std::string_view path) const noexcept
 	}
 }
 
+std::string Visitor::get_qualified_name_as_string(const clang::NamedDecl* decl) const noexcept
+{
+	std::string qual_name;
+	llvm::raw_string_ostream out_stream(qual_name);
+
+	auto print_policy = m_printing_policy;
+	print_policy.SuppressUnwrittenScope = true;
+	decl->printQualifiedName(out_stream, print_policy);
+
+	return qual_name;
+}
+
 #define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
 #define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
@@ -358,10 +371,18 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	content["canonical_name"] = type.getCanonicalType().getAsString(m_printing_policy);
 
 	// TODO(FiTH): add cmd-line flag to report even 'std internal' types?
-	if (is_type_used && (is_std_internal_type == false) && (type->isBuiltinType() == false || Config::report_used_builtin_types_opt)) {
-		// TODO(FiTH): add this as a new field to content?
-		auto canonical_name = type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy);
-		m_used_types.try_emplace(canonical_name, content);
+	if (is_type_used && is_std_internal_type == false) {
+		if (const auto* template_spec = type->getAs<clang::TemplateSpecializationType>(); template_spec != nullptr) {
+			m_used_template_spec.emplace_back(type.getTypePtr());
+		} else if (type->isBuiltinType() == false || Config::report_used_builtin_types_opt) {
+			// TODO(FiTH): add this as a new field to content?
+			// TODO(FiTH): canonical_unqualified_name
+			auto canonical_unqualified_name = Visitor::erase_all_const(
+				type.getCanonicalType().withoutLocalFastQualifiers().getAsString(m_printing_policy)
+			);
+
+			m_used_types.try_emplace(canonical_unqualified_name, content);
+		}
 	}
 }
 
@@ -405,7 +426,7 @@ void Visitor::gen_named_decl_content(const clang::NamedDecl* decl,
 		full_name_content = full_name;
 
 		if (is_type_decl)
-			m_defined_types.emplace_back(full_name);
+			m_defined_types.emplace(full_name);
 	}
 }
 
@@ -785,6 +806,9 @@ Visitor::Visitor(const clang::CompilerInstance& compiler, const clang::ASTContex
 			: std::filesystem::current_path()
 	)
 {
+	// TODO(FiTH): remove this and use flag only in local scope (like in 'get_qualified_name_as_string')?
+	m_printing_policy.SuppressUnwrittenScope = true;
+
 	const auto& src_mgr = m_context.getSourceManager();
 	m_tmpl_content["main_file_path"] = Visitor::get_relative_path(
 		src_mgr.getFilename(src_mgr.getLocForStartOfFile(src_mgr.getMainFileID()))
@@ -879,6 +903,92 @@ bool Visitor::VisitFunctionDecl(const clang::FunctionDecl* decl) noexcept
 
 void Visitor::post_visit() noexcept
 {
+	// TODO(FiTH): rewrite this as soon as possible!
+	while (m_used_template_spec.empty() == false) {
+		// TODO(FiTH):
+		//
+		// template_spec_full_name -> std::vector<float>
+		// template_decl_full_name -> std::vector
+		// args                    -> [ float ]
+
+		const auto* template_spec_type = m_used_template_spec.back();
+		auto template_spec_full_name = clang::QualType(template_spec_type, 0).getAsString(m_printing_policy);
+		m_used_template_spec.pop_back();
+
+		if (m_defined_types.contains(template_spec_full_name))
+			continue;
+
+		const auto* template_spec = template_spec_type->getAs<clang::TemplateSpecializationType>();
+		assert(template_spec != nullptr); // TODO(FiTH)
+
+		const auto* template_decl = template_spec->getTemplateName().getAsTemplateDecl();
+		assert(template_decl != nullptr); // TODO(FiTH)
+
+		auto template_decl_full_name = this->get_qualified_name_as_string(template_decl);
+		auto template_decl_name      = template_decl->getNameAsString();
+
+		if (m_defined_types.contains(template_decl_full_name) == false) {
+			// TODO(FiTH): rewrite? If 'template_spec_type' is 'std::vector<int>' this code will report 'std::vector' as used
+			auto [record_template_iter, _] = m_used_types.try_emplace(template_decl_full_name);
+			auto& record_template = record_template_iter->second;
+			record_template["name"              ] = template_decl_name;
+			record_template["full_name"         ] = template_decl_full_name;
+			record_template["is_record_template"] = true;
+		}
+
+		m_defined_types.emplace(template_spec_full_name);
+
+		const auto& decl = template_spec_type->getAsCXXRecordDecl();
+		if (decl->isCompleteDefinition() == false || decl->getIdentifier() == nullptr) {
+			TF_LOG_WARN("Templated type '", template_spec_full_name, "' is not defined. Use 'RTTI_DEFINE_TYPE()' macro");
+			continue;
+		}
+
+		std::string template_spec_name;
+		if (const auto* template_spec_typedef = template_spec_type->getAs<clang::TypedefType>(); template_spec_typedef == nullptr) {
+			template_spec_name = clang::QualType(template_spec_type->getAs<clang::TemplateSpecializationType>(), 0)
+				.getAsString(m_printing_policy);
+		} else {
+			template_spec_name = template_spec_typedef->getDecl()->getNameAsString();
+		}
+
+		// TODO(FiTH): type->getAs<clang::ElaboratedType>()->getNamedType()->getTypeClassName() == Typedef for std::string.
+		//             Check source code of getAs<clang::TemplateSpecializationType>()
+		//
+		// const auto* template_spec = type->getAs<clang::TemplateSpecializationType>();
+		// content["is_template_specialization"] = (template_spec != nullptr);
+
+		auto& content = m_tmpl_classes.emplace_back();
+		content["name"                      ] = std::move(template_spec_name);
+		content["full_name"                 ] = std::move(template_spec_full_name);
+		content["is_template_specialization"] = true;
+
+		// TODO(FiTH): code duplication, same as in VisitCXXRecordDecl (except 'is_from_main_file' and 'gen_named_decl')
+		this->gen_decl_content(decl, content);
+		// TODO(FiTH): remove? - this->gen_named_decl_content(decl, content, /* is_type_decl */ true);
+		Visitor::gen_tag_decl_content(decl, content);
+		Visitor::gen_record_decl_content(decl, content);
+
+		this->gen_cxx_record_decl_content(decl, content);
+
+		auto& template_content = content["template"];
+		template_content["name"     ] = std::move(template_decl_name);
+		template_content["full_name"] = std::move(template_decl_full_name);
+
+		auto& template_args_content = template_content["args"];
+
+		for (uint32_t i = 0; i < template_spec->getNumArgs(); ++i) {
+			const auto& template_arg = template_spec->getArg(i);
+			if (template_arg.getKind() != clang::TemplateArgument::ArgKind::Type) {
+				llvm::errs() << "TODO(FiTH): unsupported Template Argument kind: " << template_arg.getKind() << '\n';
+				continue;
+			}
+
+			auto& arg_content = template_args_content.emplace_back();
+			this->gen_type_content(template_arg.getAsType(), arg_content, /* is_type_used */ true);
+		}
+	}
+
 	for (const auto& type: m_defined_types)
 		m_used_types.erase(type);
 

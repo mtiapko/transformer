@@ -6,6 +6,7 @@
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/Lexer.h>
 
+#include "transformer/AST/TypePrinter.h"
 #include "transformer/AST/Visitor.h"
 #include "transformer/Config.h"
 #include "transformer/Log.h"
@@ -632,17 +633,19 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content,
 			methods_content, constructors_content, overloaded_operators_equal_content);
 
-		std::string base_name_scope;
-		if (base.getType()->getTypeClass() == clang::Type::TypeClass::TemplateSpecialization) {
-			const auto* base_record_decl = base.getType()->getAsRecordDecl();
-			assert(base_record_decl != nullptr); // TODO(FiTH)
+		// TODO(FiTH): remove?
+		//
+		// std::string base_name_scope;
+		// if (base.getType()->getTypeClass() == clang::Type::TypeClass::TemplateSpecialization) {
+		// 	const auto* base_record_decl = base.getType()->getAsRecordDecl();
+		// 	assert(base_record_decl != nullptr); // TODO(FiTH)
 
-			llvm::raw_string_ostream out_stream(base_name_scope);
-			Visitor::append_scope(base_record_decl->getDeclContext(), out_stream);
-		}
+		// 	llvm::raw_string_ostream out_stream(base_name_scope);
+		// 	Visitor::append_scope(base_record_decl->getDeclContext(), out_stream);
+		// }
 
-		const auto base_type_name = base.getType().getAsString(m_printing_policy);
-		const auto base_name = base_name_scope + base_type_name;
+		// const auto base_type_name = base.getType().getAsString(m_printing_policy);
+		const auto base_name = GetQualTypeAsString(base.getType(), m_printing_policy); // base_name_scope + base_type_name;
 
 		auto [content_iter, is_inserted] = bases_content.emplace(base_name, nullptr /* empty json */);
 		assert(is_inserted); // TODO(FiTH): 2 base classes with the same name?

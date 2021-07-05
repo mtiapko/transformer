@@ -321,6 +321,7 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 	content["is_enumeral"         ] = type->isEnumeralType();
 	content["is_signed_integer"   ] = type->isSignedIntegerType();
 	content["is_unsigned_integer" ] = type->isUnsignedIntegerType();
+	content["is_function_pointer" ] = type->isFunctionPointerType();
 	content["is_std_internal_type"] = is_std_internal_type;
 
 	// TODO(FiTH): record or enum?
@@ -842,7 +843,7 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 {
 	// NOTE(FiTH): decl->isAnonymousStructOrUnion() does not work for some reason
 
-	// TODO(FiTH): add? decl->getDeclKind() != ClassTemplatePartialSpecialization
+	// TODO(FiTH): add? decl->getDeclKind() != ClassTemplatePartialSpecialization and Partial?
 	// TODO(FiTH): add? decl->isDependentType() == false
 	if (
 		decl->isCompleteDefinition() &&

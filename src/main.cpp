@@ -81,6 +81,13 @@ int main(int argc, const char* argv[])
 		return *args.at(0);
 	});
 
+	// TODO(FiTH): add "file:line" format?
+	env.add_callback("log", 1, [](inja::Arguments& args)
+	{
+		std::clog << "INJA LOG> " << *args[0] << '\n';
+		return nullptr;
+	});
+
 	auto tmpl = transformer::File::read(transformer::Config::tmpl_file_path_opt.getValue());
 	auto compiled_tmpl = env.parse(tmpl);
 

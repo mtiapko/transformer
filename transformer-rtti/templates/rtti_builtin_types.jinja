@@ -1,0 +1,26 @@
+#include "transformer-rtti/BuiltInTypeInfo.h"
+#include "transformer-rtti/DB.h"
+
+using namespace transformer::rtti;
+
+namespace
+{
+
+static_assert({{ length(classes) }} == 1); // TODO(FiTH): add comment
+
+## for canonical_unqualified_type_name, t in used_types
+## if not t.is_pointer
+const BuiltInTypeInfo builtin_type_{{ loop.index }} = {
+	/* NamedTypeInfo */ {
+		/* TypeInfo */ {
+			.id   = DB::set_type_info<{{ t.name }}>(&builtin_type_{{ loop.index }}),
+			.kind = TypeKind::BUILT_IN_TYPE
+		},
+		/* .name = */ "{{ t.name }}"
+	},
+	/* is_signed = */ {{ t.is_signed_integer }}
+};
+
+## endif
+## endfor
+}

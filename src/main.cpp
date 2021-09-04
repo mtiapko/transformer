@@ -75,6 +75,7 @@ int main(int argc, const char* argv[])
 	// add custom callbacks
 	env.add_callback("valueOr", 2, [](inja::Arguments& args)
 	{
+		// TODO(FiTH): WARNING! This is copy of array???
 		if (args.at(0)->is_null())
 			return *args.at(1);
 

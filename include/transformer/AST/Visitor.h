@@ -23,6 +23,8 @@ private:
 	inja::json& m_tmpl_enums;
 	inja::json& m_tmpl_funcs;
 
+	clang::AccessSpecifier m_current_access_specifier;
+
 	// TODO(FiTH): is it possible to define types with the same name in one file (not templates)?
 	inja::json::object_t  m_used_types;
 	std::set<std::string> m_defined_types;
@@ -42,6 +44,7 @@ private:
 	static std::string erase_all_const(std::string str) noexcept;
 	static void append_scope(const clang::DeclContext* decl_ctx, llvm::raw_ostream& ostream) noexcept;
 	std::string get_qualified_name_as_string(const clang::NamedDecl* decl) const noexcept;
+	clang::AccessSpecifier push_current_access_specifier(clang::AccessSpecifier access) noexcept;
 
 private:
 	void        gen_type_content(const clang::QualType& type, inja::json& content, bool is_used_type = false) noexcept;

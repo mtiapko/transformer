@@ -294,6 +294,21 @@ std::string Visitor::get_qualified_name_as_string(const clang::NamedDecl* decl) 
 	return qual_name;
 }
 
+clang::AccessSpecifier Visitor::push_current_access_specifier(clang::AccessSpecifier access) noexcept
+{
+	static_assert(
+		clang::AccessSpecifier::AS_public    < clang::AccessSpecifier::AS_protected &&
+		clang::AccessSpecifier::AS_protected < clang::AccessSpecifier::AS_private,
+		"Unexpected enum values"
+	);
+
+	const auto prev_access = m_current_access_specifier;
+	if (m_current_access_specifier < access)
+		m_current_access_specifier = access;
+
+	return prev_access;
+}
+
 #define SET_VALUE_OF_PTR(name, decl, value) content[str_to_lower_case(#name).data()] = decl->value()
 #define SET_VALUE_OF(decl, value)           SET_VALUE_OF_PTR(value, (&decl), value)
 #define SET_VALUE(value)                    SET_VALUE_OF_PTR(value, decl, value)
@@ -390,13 +405,15 @@ void Visitor::gen_type_content(const clang::QualType& type, inja::json& content,
 
 void Visitor::gen_decl_content(const clang::Decl* decl, inja::json& content) const noexcept
 {
+	SET_VALUE(isTemplated);
 	SET_VALUE(isTemplateDecl);
 	SET_VALUE(isInStdNamespace);
 	SET_VALUE(isInAnonymousNamespace);
 
+	// TODO(FiTH): rename 'access' to 'access_specifier'?
 	auto decl_access = decl->getAccess();
 	if (decl_access != clang::AccessSpecifier::AS_none)
-		content["access"] = clang::getAccessSpelling(decl_access); // TODO(FiTH): rename to 'access_specifier'?
+		content["access"] = clang::getAccessSpelling(std::max(decl_access, m_current_access_specifier));
 
 	const auto& src_mgr = m_context.getSourceManager();
 	content["file_path"] = src_mgr.getFilename(decl->getLocation());
@@ -631,6 +648,7 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		// TODO(FiTH): getVBaseClassOffset?
 		auto base_offset_in_chars = layout.getBaseClassOffset(base_decl).getQuantity() + current_offset_in_chars;
 
+		const auto prev_access = this->push_current_access_specifier(base.getAccessSpecifier());
 		this->gen_class_all_bases_full_content(base_decl, base_layout, base_offset_in_chars, bases_content, fields_content,
 			methods_content, constructors_content, overloaded_operators_equal_content);
 
@@ -669,6 +687,10 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		this->gen_class_all_fields_full_content(base_decl, base_layout, base_offset_in_chars, fields_content);
 		this->gen_class_all_methods_full_content(base_decl, methods_content,
 			/* constructors_content */ nullptr, /* overloaded_operators_equal_content */ nullptr);
+
+		/* restore previous access specifier */
+		m_current_access_specifier = prev_access;
+
 	}
 }
 
@@ -803,6 +825,8 @@ Visitor::Visitor(const clang::CompilerInstance& compiler, const clang::ASTContex
 	, m_tmpl_classes(tmpl_content["classes"  ])
 	, m_tmpl_enums  (tmpl_content["enums"    ])
 	, m_tmpl_funcs  (tmpl_content["functions"])
+
+	, m_current_access_specifier(clang::AccessSpecifier::AS_public) // NOTE(FiTH): AS_none == 3!
 
 	, m_relative_dir_path(
 		Config::relative_dir_path_opt.empty() == false

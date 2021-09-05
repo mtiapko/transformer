@@ -119,8 +119,9 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 			if ((curr == c && chars_state.total_count == 0) || (curr == '\0'))
 				return i;
 
-			if      (chars_state.data.single_quote == 0) { if (curr == '"' ) chars_state.data.double_quote ^= 1; } // invert
-			else if (chars_state.data.double_quote == 0) { if (curr == '\'') chars_state.data.single_quote ^= 1; } // invert
+			// TODO(FiTH): add backslash support (\' and \")
+			if      (curr == '"' ) chars_state.data.double_quote ^= 1; // invert
+			else if (curr == '\'') chars_state.data.single_quote ^= 1; // invert
 			else if (curr == '[') ++chars_state.data.l_bracket_count;
 			else if (curr == ']') --chars_state.data.l_bracket_count;
 			else if (curr == '{') ++chars_state.data.l_brace_count;

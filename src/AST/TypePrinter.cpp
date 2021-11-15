@@ -1892,7 +1892,7 @@ static void printArgument(const TemplateArgument &A, const PrintingPolicy &PP,
     SubPolicy.SuppressScope = false;
     OS << transformer::AST::GetQualTypeAsString(A.getAsType(), SubPolicy);
   } else {
-    A.print(PP, OS); // TODO(FiTH): , IncludeType);
+    A.print(PP, OS, IncludeType);
   }
 }
 
@@ -1902,7 +1902,7 @@ static void printArgument(const TemplateArgumentLoc &A,
   const TemplateArgument::ArgKind &Kind = A.getArgument().getKind();
   if (Kind == TemplateArgument::ArgKind::Type)
     return A.getTypeSourceInfo()->getType().print(OS, PP);
-  return A.getArgument().print(PP, OS); // TODO(FiTH): , IncludeType);
+  return A.getArgument().print(PP, OS, IncludeType);
 }
 
 static bool isSubstitutedTemplateArgument(ASTContext &Ctx, TemplateArgument Arg,

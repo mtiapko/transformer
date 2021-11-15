@@ -106,7 +106,7 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 			uint32_t total_count = 0;
 		} chars_state {};
 
-		static_assert(sizeof(chars_state) == sizeof(chars_state.total_count));
+		static_assert(sizeof(chars_state.data) == sizeof(chars_state.total_count));
 
 		// TODO(FiTH): add assert if curr == '\0' but total_count != 0?
 		// TODO(FiTH): add assert if count < 0?
@@ -138,10 +138,12 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 		const auto is_whitespace = [](const char c) noexcept
 		{ return (c == ' ' || c == '\t' || c == '\n'); };
 
-		while (is_whitespace(str[beg_index])) // '\0' is not a whitespace
+		// '\0' is not a whitespace
+		while (is_whitespace(str[beg_index]))
 			++beg_index;
 
-		while (beg_index > end_index && is_whitespace(str[end_index]))
+		// at the beginning 'end_index' is index of ',' or '\0'. Using '-1' to skip them
+		while (beg_index < end_index && is_whitespace(str[end_index - 1]))
 			--end_index;
 
 		return std::pair { beg_index, end_index };
@@ -154,15 +156,14 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 		for (size_t beg = 0, end = 0; beg < attr_str.size(); beg = end + 1 /* skip ',' */) {
 			end = find_char(attr_str, beg, ',');
 
-			const auto [attr_beg, attr_end] = skip_whitespaces(attr_str, beg, end - 1 /* skip ',' or '\0' */);
-			if (attr_str[attr_beg] == ',') // case with ", ," or even ",,"
+			const auto [attr_beg, attr_end] = skip_whitespaces(attr_str, beg, end);
+			if (attr_beg == attr_end)
 				continue;
 
-			// TODO(FiTH): add assert attr_beg <= attr_end
-			assert(attr_beg <= attr_end);
+			// TODO(FiTH): add assert attr_beg < attr_end
+			assert(attr_beg < attr_end);
 
-			// attr_beg can be equal to attr_end! using +1 for size
-			const auto parsed_attr = std::string_view { attr_str.data() + attr_beg, attr_end - attr_beg + 1 };
+			const auto parsed_attr = std::string_view { attr_str.data() + attr_beg, attr_end - attr_beg };
 			if (parsed_attr.starts_with(m_rtti_attributes_namespace)) {
 				// TODO(FiTH): add assert that 'parsed_attr' does not contain '=', '(' etc.
 				content[parsed_attr.data() + m_rtti_attributes_namespace.size()] = true;

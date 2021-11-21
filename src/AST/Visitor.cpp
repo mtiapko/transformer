@@ -87,6 +87,7 @@ bool Visitor::does_decl_require_content_gen(const clang::Decl* decl) const noexc
 	return (Config::gen_content_for_includes_opt || this->is_from_main_file(decl));
 }
 
+// TODO(FiTH): ahhh... why code that works with text looks like... this. is this a problem with me?
 std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& annotate_attr,
 	inja::json& content) const noexcept
 {
@@ -116,8 +117,12 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 		for (size_t i = beg_index; i <= str.size(); ++i) {
 			const char curr = str[i];
 
-			if ((curr == c && chars_state.total_count == 0) || (curr == '\0'))
+			if ((curr == c && chars_state.total_count == 0) || (curr == '\0')) {
+				// TODO(FiTH)
+				assert(chars_state.data.double_quote == 0 && chars_state.data.single_quote == 0);
+
 				return i;
+			}
 
 			// TODO(FiTH): add backslash support (\' and \")
 			if      (curr == '"' ) chars_state.data.double_quote ^= 1; // invert
@@ -133,11 +138,13 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 		return str.size();
 	};
 
-	const auto skip_whitespaces = [](const std::string& str, size_t beg_index, size_t end_index) noexcept
+	const auto is_whitespace = [](const char c) noexcept
 	{
-		const auto is_whitespace = [](const char c) noexcept
-		{ return (c == ' ' || c == '\t' || c == '\n'); };
+		return (c == ' ' || c == '\t' || c == '\n');
+	};
 
+	const auto skip_whitespaces = [&is_whitespace](const std::string_view str, size_t beg_index, size_t end_index) noexcept
+	{
 		// '\0' is not a whitespace
 		while (is_whitespace(str[beg_index]))
 			++beg_index;
@@ -163,10 +170,57 @@ std::vector<std::string> Visitor::split_annotate_attributes(const inja::json& an
 			// TODO(FiTH): add assert attr_beg < attr_end
 			assert(attr_beg < attr_end);
 
-			const auto parsed_attr = std::string_view { attr_str.data() + attr_beg, attr_end - attr_beg };
+			auto parsed_attr = std::string_view { attr_str.data() + attr_beg, attr_end - attr_beg };
 			if (parsed_attr.starts_with(m_rtti_attributes_namespace)) {
-				// TODO(FiTH): add assert that 'parsed_attr' does not contain '=', '(' etc.
-				content[parsed_attr.data() + m_rtti_attributes_namespace.size()] = true;
+				parsed_attr = parsed_attr.substr(m_rtti_attributes_namespace.size());
+
+				// NOTE(FiTH): this attr starts with rtti prefix, so it does not have any whitespaces at the beginning
+				size_t       equal_sign_index = 0;
+				const size_t key_beg          = equal_sign_index;
+
+				for (/* empty */; equal_sign_index < parsed_attr.size(); ++equal_sign_index) {
+					// TODO(FiTH): TODO
+					assert(parsed_attr[equal_sign_index] != ('_' | (1 << 5)));
+
+					// TODO(FiTH): is it possible to have non-printable (e.g. new line, tab) in annotate attr?
+					// all printable chars have (1 << 5) bit
+					// capital    -> lower case
+					// lower case -> lower case
+					// digit      -> digit
+					// '_' (0x5f) -> (0x7F)
+					// '-'        -> '-' TODO(FiTH): allow this?
+					const auto c = (parsed_attr[equal_sign_index] | (1 << 5));
+					if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')
+						continue;
+
+					break;
+				}
+
+				const auto key_end = equal_sign_index;
+				while (is_whitespace(parsed_attr[equal_sign_index]))
+					++equal_sign_index;
+
+				// NOTE(FiTH): 'parsed_attr' points to 'attr_str' (std::string), so it is always null-terminated
+				if (parsed_attr[equal_sign_index] == '=') {
+					const auto [val_beg, val_end] = skip_whitespaces(parsed_attr, equal_sign_index + 1, parsed_attr.size());
+
+					// NOTE(FiTH): if attr has '\'' at the beginning, then it should also has it at the end
+					assert((parsed_attr[val_beg] == '\'') == (parsed_attr[val_end - 1] == '\'')
+						&& ((parsed_attr[val_beg] != '\'') || (val_end - val_beg >= 2)));
+
+					const auto key = std::string_view { parsed_attr.data() + key_beg, key_end - key_beg };
+					const auto val = std::string_view { // TODO(FiTH): this should be done in json lib
+						parsed_attr.data() + val_beg + (parsed_attr[val_beg] == '\''),
+						val_end            - val_beg - (parsed_attr[val_beg] == '\'') * 2
+					};
+
+					// TODO(FiTH): find API to work with sting_view
+					content[std::string(key)] = (parsed_attr[val_beg] == '\'' ? val : inja::json::parse(val));
+				} else {
+					// TODO(FiTH): find API to work with sting_view
+					content[std::string(parsed_attr)] = true;
+				}
+
 				continue;
 			}
 

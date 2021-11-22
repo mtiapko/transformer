@@ -89,6 +89,21 @@ int main(int argc, const char* argv[])
 		return nullptr;
 	});
 
+	// add named sub templates
+	for (const auto& named_sub_tmpl: transformer::Config::named_sub_template_list) {
+		const auto delim_pos = named_sub_tmpl.find(':');
+		assert(delim_pos != std::string::npos); // TODO(FiTH)
+
+		const std::string_view sub_tmpl_name = { named_sub_tmpl.begin(), named_sub_tmpl.begin() + delim_pos };
+		const std::string_view sub_tmpl_path = { named_sub_tmpl.begin() + delim_pos + 1, named_sub_tmpl.end() };
+
+		auto sub_tmpl = transformer::File::read(sub_tmpl_path);
+		auto compiled_sub_tmpl = env.parse(sub_tmpl);
+
+		// TODO(FiTH): this method has a bad API...
+		env.include_template(std::string(sub_tmpl_name), compiled_sub_tmpl);
+	}
+
 	auto tmpl = transformer::File::read(transformer::Config::tmpl_file_path_opt.getValue());
 	auto compiled_tmpl = env.parse(tmpl);
 

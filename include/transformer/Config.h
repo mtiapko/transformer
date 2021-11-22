@@ -63,6 +63,8 @@ public:
 	// TODO(FiTH): rename?
 	static inline llvm::cl::list<std::string> content_flag_opt { "add-content-flag" };
 	static inline llvm::cl::list<std::string> content_json_opt { "add-content-json" };
+
+	static inline llvm::cl::list<std::string> named_sub_template_list { "add-named-sub-tmpl" };
 };
 
 }

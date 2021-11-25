@@ -931,9 +931,10 @@ bool Visitor::VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) noexcept
 		this->does_decl_require_content_gen(decl)
 	) {
 		// TODO(FiTH): rewrite this 'if'?
-		const auto& src_mgr = m_context.getSourceManager();
-		if (src_mgr.isInSystemHeader(decl->getLocation()))
-			return true;
+		// TODO(FiTH): add this as flag or remove?
+		// const auto& src_mgr = m_context.getSourceManager();
+		// if (src_mgr.isInSystemHeader(decl->getLocation()))
+		// 	return true;
 
 		auto& content = m_tmpl_classes.emplace_back();
 

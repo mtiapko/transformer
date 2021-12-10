@@ -56,6 +56,18 @@ struct RecordTypeInfo : public NamedTypeInfo
 	const Map<StringView, const RecordMethodInfo*> methods_map; // TODO(FiTH): overloaded methods?
 };
 
+struct RecordTemplateTypeInfo final : public NamedTypeInfo
+{
+	// TODO(FiTH): empty?
+};
+
+// TODO(FiTH): move to another file
+struct RecordTemplateSpecializationTypeInfo final : public RecordTypeInfo
+{
+	const TypeID             template_type_id;
+	const Span<const TypeID> template_args;
+};
+
 }
 
 #endif // !__TRANSFORMER_RTTI_RECORD_TYPE_INFO_H__

@@ -129,6 +129,7 @@ public: /* API */
 		return ObjectView::find_field(type, self, name);
 	}
 
+	// TODO(FiTH): add version when we know all types of parameters - and do requires(<can assign arg to param>)
 	template<typename Ret = void, typename... Args>
 	Ret call_method(StringView name, Args&&... args) const noexcept
 	{

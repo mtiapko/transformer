@@ -1,3 +1,4 @@
+#if 0
 //===- TypePrinter.cpp - Pretty-Print Clang Types -------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -2367,3 +2368,4 @@ std::string transformer::AST::GetQualTypeAsString(const clang::QualType& qual_ty
 
   return buffer;
 }
+#endif

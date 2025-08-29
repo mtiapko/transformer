@@ -77,9 +77,9 @@ We have in file {{ file_path }} {{ length(classes) }} classes:
 {% endfor %}
 
 {% for e in enums %}
-Enum {{ e.name }} has type {{ e.integer_type }}:
-	{% for c in e.consts %}
-	- {{ c.full_name }} has value {{ c.value }}
+Enum {{ e.name }} has type {{ e.integer_type.name }}:
+	{% for en in e.enumerators %}
+	- {{ en.name }} has value {{ en.value }}
 	{% endfor %}
 {% endfor %}
 ```

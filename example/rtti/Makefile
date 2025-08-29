@@ -23,7 +23,7 @@ all: gen
 
 test/gen.cpp: template.jinja test/rect.h
 	@ ../../bin/transformer ./template.jinja ./test/rect.h -o test/gen.cpp --compiler-args \
-		-cxx-isystem /usr/lib/clang/9.0.1/include -std=c++2a -x c++ \
+		-cxx-isystem $(clang --print-resource-dir)/include -std=c++2a -x c++ \
 		-I../../libs/json/include \
 		-I./include
 	@ echo Done!

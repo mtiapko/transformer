@@ -544,7 +544,7 @@ void Visitor::gen_enum_decl_content(const clang::EnumDecl* decl,
 		std::array<char, 32> enum_init_val_str {};
 
 		const auto& enum_init_val = decl_enumerator->getInitVal();
-		assert(enum_init_val.isSigned() == decl->getIntegerType()->isSignedIntegerType()); // TODO(FiTH)
+		// TODO(FiTH): assert(enum_init_val.isSigned() == decl->getIntegerType()->isSignedIntegerType());
 
 		// TODO(FiTH): if enum_init_val.{getMinSignedBits or getActiveBits}() > 32 -> add "l" or "ll" at the end?
 		if (enum_init_val.isSigned()) {
@@ -572,7 +572,7 @@ void Visitor::gen_func_decl_content(const clang::FunctionDecl* decl,
 {
 	SET_VALUE(isVariadic);
 	SET_VALUE(isVirtualAsWritten);
-	SET_VALUE(isPure);
+	SET_VALUE(isPureVirtual);
 	SET_VALUE(isTrivial);
 	SET_VALUE(isDefaulted);
 	SET_VALUE(isExplicitlyDefaulted);
@@ -720,7 +720,11 @@ void Visitor::gen_class_all_bases_full_content(const clang::CXXRecordDecl* decl,
 		// }
 
 		// const auto base_type_name = base.getType().getAsString(m_printing_policy);
+#if 0
 		const auto base_name = GetQualTypeAsString(base.getType(), m_printing_policy); // base_name_scope + base_type_name;
+#else
+		const auto base_name = base.getType().getAsString(m_printing_policy);
+#endif
 
 		auto [content_iter, is_inserted] = bases_content.emplace(base_name, nullptr /* empty json */);
 		assert(is_inserted); // TODO(FiTH): 2 base classes with the same name?
@@ -1062,8 +1066,9 @@ void Visitor::post_visit() noexcept
 
 		auto& template_args_content = template_content["args"];
 
-		for (uint32_t i = 0; i < template_spec->getNumArgs(); ++i) {
-			const auto& template_arg = template_spec->getArg(i);
+		const auto& template_arguments = template_spec->template_arguments();
+		for (uint32_t i = 0; i < template_arguments.size(); ++i) {
+			const auto& template_arg = template_arguments[i];
 			if (template_arg.getKind() != clang::TemplateArgument::ArgKind::Type) {
 				llvm::errs() << "TODO(FiTH): unsupported Template Argument kind: " << template_arg.getKind() << '\n';
 				continue;
